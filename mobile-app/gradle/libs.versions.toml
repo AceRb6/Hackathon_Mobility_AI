@@ -8,6 +8,14 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.0"
 composeBom = "2024.04.01"
+firebaseBom = "33.1.1"
+services = "4.4.2"
+crashlytics = "3.0.2"
+
+navigationCompose = "2.7.7"
+
+coil = "2.7.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,8 +33,28 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
+# Me parece que le pudes poner cualquier nombre en estas cosas,
+#firebase-bom se encarga de que nosotros no tengamos que especificar la version
+firebase-bom = {module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom"}
+firebase-crashlytics = {module = "com.google.firebase:firebase-crashlytics"}
+firebase-auth = {module = "com.google.firebase:firebase-auth-ktx"}
+firebase-firestore = {module = "com.google.firebase:firebase-firestore"}
+
+
+coil = {module = "io.coil-kt:coil-compose", version.ref = "coil"}
+
+android-navigation-compose = {module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose"}
+
+#Lo siguiente es para las iconos de material(la wea para MAPAS PRUEBA
+androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+
+#Estos son los que yo agregue
+googleServices = {id = "com.google.gms.google-services", version.ref = "services"}
+crashlytics = {id = "com.google.firebase.crashlytics", version.ref = "crashlytics"}
+#kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 

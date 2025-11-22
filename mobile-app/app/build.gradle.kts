@@ -2,6 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.crashlytics)
+    id("org.jetbrains.kotlin.plugin.parcelize")
+
+    //esto es para sacar lo de guardar rutas en local
+    id ("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
 }
 
 android {
@@ -41,6 +48,23 @@ android {
 
 dependencies {
 
+    /*todas estas dependencias estan especificadas en libs.versions.toml*/
+    /*no se si el orden tenga que ser especificamente como lo puse, pero de momento lo dejo asi*/
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
+    /*esta libreria es para imagenes*/
+    implementation(libs.coil)
+
+    implementation(libs.android.navigation.compose)
+
+    /*esta es de lo de los PRUEBA MAPAS*/
+    implementation(libs.androidx.material.icons.extended)
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -56,4 +80,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //esto es para sacar lo de guardar rutas en local
+    implementation ("androidx.datastore:datastore-preferences:1.1.1")
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 }
