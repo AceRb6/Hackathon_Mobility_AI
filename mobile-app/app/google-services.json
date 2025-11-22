@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "339564270090",
+    "project_id": "hackaton-ai-mobility",
+    "storage_bucket": "hackaton-ai-mobility.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339564270090:android:324b1a4d470199176845f3",
+        "android_client_info": {
+          "package_name": "com.example.hackathon_ai_mobility"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg78JnCn-RElBrgEgKKeM1F3CiqQ8Qlp4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
