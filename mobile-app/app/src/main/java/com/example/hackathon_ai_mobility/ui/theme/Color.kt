@@ -2,10 +2,13 @@ package com.example.hackathon_ai_mobility.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Paleta de Colores Institucional del Metro CDMX
+val MetroRed = Color(0xFFE3001B) // Rojo vibrante oficial
+val MetroWhite = Color(0xFFFFFFFF) // Blanco puro
+val MetroBlack = Color(0xFF000000) // Negro puro
+val MetroDarkGray = Color(0xFF333333) // Gris oscuro para textos secundarios
+val MetroLightGray = Color(0xFFF5F5F5) // Gris claro para fondos
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Colores de Estado para Campos de Texto
+val FieldActivado = Color(0xFFFFFFFF) // Fondo blanco cuando está activo
+val FieldDesactivado = Color(0xFFF0F0F0) // Fondo grisáceo cuando está inactivo

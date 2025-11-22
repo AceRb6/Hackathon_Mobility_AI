@@ -5,12 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.hackathon_ai_mobility.reportes.PantallaDeReportesJefeDeEstacion
 import com.example.hackathon_ai_mobility.ui.theme.Hackathon_AI_MobilityTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +16,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Hackathon_AI_MobilityTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                // Mostramos directamente la pantalla de reportes
+                PantallaDeReportesJefeDeEstacion(
+                    navegarPantallaPrincipal = { /* Acción al cancelar */ },
+                    navegarPantallaMisReportesUsuario = { /* Acción al ver reportes */ }
+                )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Hackathon_AI_MobilityTheme {
-        Greeting("Android")
     }
 }
