@@ -23,17 +23,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmetrocdmx.presentation.modelos.ModeloReportesBD
-import com.example.appmetrocdmx.ui.theme.Black
+import com.example.hackathon_ai_mobility.presentation.modelos.ModeloReportesBD
+import com.example.hackathon_ai_mobility..ui.theme.Black
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import com.example.appmetrocdmx.ui.theme.FieldActivado
-import com.example.appmetrocdmx.ui.theme.FieldDesactivado
+import com.example.hackathon_ai_mobility.ui.theme.FieldActivado
+import com.example.hackathon_ai_mobility.ui.theme.FieldDesactivado
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
-import com.example.appmetrocdmx.presentation.modelos.EstacionBD
+import com.example.hackathon_ai_mobility.presentation.modelos.EstacionBD
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -63,9 +63,23 @@ fun PantallaDeReportesJefeDeEstacion(
 
     //AQUI TERMINA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
 
-    //Variables de la seccion DESCRIPCION DEL REPORTE
+    ///////// Variables de la nueva pantalla de Jefe de estación //////////////////////////
+
+    //Variable de el problema
+    val problema = remember { mutableStateOf("" }
+
+    //Variable de la seccion DESCRIPCION DEL REPORTE
     val descripcion = remember { mutableStateOf("") }
 
+    //Variable de hora de inicio
+    val horaInicio = remember { System.currentTimeMillis() }
+
+    //Variable de equpo
+    val equipo = remember { mutableStateOf("" }
+
+    //Variable de localización
+    val localizacion = remember { mutableStateOf("" } //Esto tiene que cambiar
+    ///////////////////////////////////////////////////////Aqui acaban las variables///////////////////////////////
 
     //Esto es para Crear el reporte ya con la estacion seleccionada------------------
 
@@ -96,7 +110,7 @@ fun PantallaDeReportesJefeDeEstacion(
 
         //TITULO DE LA PANTALLA
         Text(
-            "Crear Reporte",
+            "Jefe de estación",
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 30.sp,
@@ -131,7 +145,7 @@ fun PantallaDeReportesJefeDeEstacion(
         //FINAL BOTON PARA IR A PANTALLA PRINCIPAL------------
 
 
-        //INICIO ESCOGER ESTACION
+/*        //INICIO ESCOGER ESTACION
         Text(
             "Selecciona estacion",
             color = Color.White,
@@ -157,9 +171,27 @@ fun PantallaDeReportesJefeDeEstacion(
                 }
             }
         )
-        //FINAL ESCOGER ESTACION
+        //FINAL ESCOGER ESTACION */
 
 
+        //INICIO CUADRO DE PROBLEMA
+        Text(
+            "Titulo del problema",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 25.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        DescripcionField(
+            problema = descripcion.value,
+            onDescripcionChange = { nuevaDescripcion ->
+                descripcion.value = nuevaDescripcion
+            }
+        )
+
+
+        //FINAL CUADRO DE TEXTO DE Problema
 
         //INICIO CUADRO DE TEXTO DESCRIPCION DEL PROBLEMA
         Text(
