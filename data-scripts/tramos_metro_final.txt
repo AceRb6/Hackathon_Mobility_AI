@@ -1,0 +1,184 @@
+linea|tramo_formato|metros|estado
+1|Pantitlán - Zaragoza|1320|1
+1|Zaragoza - Gómez Farías|762|1
+1|Gómez Farías - Boulevard Puerto Aéreo|611|1
+1|Boulevard Puerto Aéreo - Balbuena|595|1
+1|Balbuena - Moctezuma|703|1
+1|Moctezuma - San Lázaro|478|1
+1|San Lázaro - Candelaria|866|1
+1|Candelaria - Merced|698|1
+1|Merced - Pino Suárez|745|1
+1|Pino Suárez - Isabel la Católica|382|1
+1|Isabel la Católica - Salto del Agua|445|1
+1|Salto del Agua - Balderas|458|1
+1|Balderas - Cuauhtémoc|409|1
+1|Cuauhtémoc - Insurgentes|793|1
+1|Insurgentes - Sevilla|645|1
+1|Sevilla - Chapultepec|501|1
+1|Chapultepec - Juanacatlán|973|1
+1|Juanacatlán - Tacubaya|1158|1
+1|Tacubaya - Observatorio|1262|1
+2|Cuatro Caminos - Panteones|1639|1
+2|Panteones - Tacuba|1416|1
+2|Tacuba - Cuitláhuac|637|1
+2|Cuitláhuac - Popotla|620|1
+2|Popotla - Colegio Militar|462|1
+2|Colegio Militar - Normal|516|1
+2|Normal - San Cosme|657|1
+2|San Cosme - Revolución|537|1
+2|Revolución - Hidalgo|587|1
+2|Hidalgo - Bellas Artes|447|1
+2|Bellas Artes - Allende|387|1
+2|Allende - Zócalo|602|1
+2|Zócalo - Pino Suárez|745|1
+2|Pino Suárez - San Antonio Abad|817|1
+2|San Antonio Abad - Chabacano|642|1
+2|Chabacano - Viaducto|774|1
+2|Viaducto - Xola|490|1
+2|Xola - Villa de Cortés|698|1
+2|Villa de Cortés - Nativitas|750|1
+2|Nativitas - Portales|924|1
+2|Portales - Ermita|748|1
+2|Ermita - General Anaya|838|1
+2|General Anaya - Tasqueña|1330|1
+3|Indios Verdes - Deportivo 18 de Marzo|1166|1
+3|Deportivo 18 de Marzo - Potrero|966|1
+3|Potrero - La Raza|1106|1
+3|La Raza - Tlatelolco|1445|1
+3|Tlatelolco - Guerrero|1042|1
+3|Guerrero - Hidalgo|702|1
+3|Hidalgo - Juárez|251|1
+3|Juárez - Balderas|659|1
+3|Balderas - Niños Héroes|665|1
+3|Niños Héroes - Hospital General|559|1
+3|Hospital General - Centro Médico|653|1
+3|Centro Médico - Etiopía/Plaza de la Transparencia|1119|1
+3|Etiopía/Plaza de la Transparencia - Eugenia|950|1
+3|Eugenia - División del norte|715|1
+3|División del Norte - Zapata|794|1
+3|Zapata - Coyoacán|1153|1
+3|Coyoacán - Viveros/Derechos Humanos|908|1
+3|Viveros/Derechos Humanos - Miguel Ángel de Quevedo|824|1
+3|Miguel Ángel de Quevedo - Copilco|1295|1
+3|Copilco - Universidad|1306|1
+4|Santa Anita - Jamaica|758|1
+4|Jamaica - Fray Servando|1033|1
+4|Fray Servando - Candelaria|633|1
+4|Candelaria - Morelos|1062|1
+4|Morelos - Canal del Norte|910|1
+4|Canal del Norte - Consulado|884|1
+4|Consulado - Bondojito|645|1
+4|Bondojito - Talismán|959|1
+4|Talismán - Martín Carrera|1129|1
+5|Politécnico - Instituto del Petróleo|1188|1
+5|Instituto del Petróleo - Autobuses del Norte|1067|1
+5|Autobuses del Norte - La Raza|975|1
+5|La Raza - Misterios|892|1
+5|Misterios - Valle Gómez|969|1
+5|Valle Gómez - Consulado|679|1
+5|Consulado - Eduardo Molina|815|1
+5|Eduardo Molina - Aragón|860|1
+5|Aragón - Oceanía|1219|1
+5|Oceanía - Terminal Aérea|1174|1
+5|Terminal Aérea - Hangares|1153|1
+5|Hangares - Pantitlán|1644|1
+6|El Rosario - Tezozómoc|1257|1
+6|Tezozómoc - Azcapotzalco|973|1
+6|Azcapotzalco - Ferrería|1173|1
+6|Ferrería - Norte 45|1072|1
+6|Norte 45 - Vallejo|660|1
+6|Vallejo - Instituto del Petróleo|755|1
+6|Instituto del Petróleo - Lindavista|1258|1
+6|Lindavista - Deportivo 18 de Marzo|1075|1
+6|Deportivo 18 de Marzo - La Villa-Basílica|570|1
+6|La Villa - Basílica-Martín Carrera|1141|1
+7|El Rosario - Aquíles Serdán|1615|1
+7|Aquíles Serdán - Camarones|1402|1
+7|Camarones - Refinería|952|1
+7|Refinería - Tacuba|1295|1
+7|Tacuba - San Joaquín|1433|1
+7|San Joaquín - Polanco|1163|1
+7|Polanco - Auditorio|812|1
+7|Auditorio - Constituyentes|1430|1
+7|Constituyentes - Tacubaya|1005|1
+7|Tacubaya - San Pedro de los Pinos|1084|1
+7|San Pedro de los Pinos - San Antonio|606|1
+7|San Antonio - Mixcoac|788|1
+7|Mixcoac - Barranca del Muerto|1476|1
+8|Garibaldi - Bellas Artes|634|1
+8|Bellas Artes - San Juan de Letrán|456|1
+8|San Juan de Letrán - Salto del Agua|292|1
+8|Salto del Agua - Doctores|564|1
+8|Doctores - Obrera|761|1
+8|Obrera - Chabacano|1143|1
+8|Chabacano - La Viga|843|1
+8|La Viga - Santa Anita|633|1
+8|Santa Anita - Coyuya|968|1
+8|Coyuya - Iztacalco|993|1
+8|Iztacalco - Apatlaco|910|1
+8|Apatlaco - Aculco|534|1
+8|Aculco - Escuadrón 201|789|1
+8|Escuadrón 201 - Atlalilco|1738|1
+8|Atlalilco - Iztapalapa|732|1
+8|Iztapalapa - Cerro de la Estrella|717|1
+8|Cerro de la Estrella - UAM I|1135|1
+8|UAM I - Constitución de 1917|1137|1
+A|Pantitlán - Puebla|1380|1
+9|Puebla - Ciudad Deportiva|800|1
+9|Ciudad Deportiva - Velódromo|1110|1
+9|Velódromo - Mixiuhca|821|1
+9|Mixiuhca - Jamaica|942|1
+9|Jamaica - Chabacano|1031|1
+9|Chabacano - Lázaro Cardenas|1000|1
+9|Lázaro Cardenas - Centro Médico|1059|1
+9|Centro Médico - Chilpancingo|1152|1
+9|Chilpancingo - Patriotismo|955|1
+9|Patriotismo - Tacubaya|1133|1
+A|Pantitlán - Agrícola Oriental|1639|1
+A|Agrícola Oriental - Canal de San Juan|1093|1
+A|Canal de San Juan - Tepalcates|1456|1
+A|Tepalcates - Guelatao|1161|1
+A|Guelatao - Peñón Viejo|2206|1
+A|Peñón Viejo - Acatitla|1379|1
+A|Acatitla - Santa Marta|1100|1
+A|Santa Marta - Los Reyes|1783|1
+A|Los Reyes - La Paz|1956|1
+B|Ciudad Azteca - Plaza Aragón|574|1
+B|Plaza Aragón - Olímpica|709|1
+B|Olímpica - Ecatepec|596|1
+B|Ecatepec - Múzquiz|1485|1
+B|Múzquiz - Río de los Remedios|1155|1
+B|Río de los Remedios - Impulsora|436|1
+B|Impulsora - Nezahualcóyotl|1393|1
+B|Nezahualcóyotl - Villa de Aragón|1335|1
+B|Villa de Aragón - Bosques de Aragón|784|1
+B|Bosques de Aragón - Deportivo Oceanía|1165|1
+B|Deportivo Oceanía - Oceanía|863|1
+B|Oceanía - Romero Rubio|809|1
+B|Romero Rubio - Ricardo Flores Magón|908|1
+B|Ricardo Flores Magón - San Lázaro|907|1
+B|San Lázaro - Morelos|1296|1
+B|Morelos - Tepito|498|1
+B|Tepito - Lagunilla|611|1
+B|Lagunilla - Garibaldi|474|1
+B|Garibaldi - Guerrero|757|1
+B|Guerrero - Buenavista|521|1
+12|Tláhuac - Tlaltenco|1298|1
+12|Tlaltenco - Zapotitlán|1115|1
+12|Zapotitlán - Nopalera|1276|1
+12|Nopalera - Olivos|1360|1
+12|Olivos - Tezonco|490|1
+12|Tezonco - Periférico Oriente|1545|1
+12|Periférico Oriente - Calle 11|1111|1
+12|Calle 11 - Lomas Estrella|906|1
+12|Lomas Estrella - San Andrés Tomatlán|1060|1
+12|San Andrés Tomatlán - Culhuacán|990|1
+12|Culhuacán - Atlalilco|1671|1
+12|Atlalilco - Mexicaltzingo|1922|1
+12|Mexicaltzingo - Ermita|1805|1
+12|Ermita - Eje Central|895|1
+12|Eje Central - Parque de los Venados|1280|1
+12|Parque de los Venados - Zapata|563|1
+12|Zapata - Hospital 20 de Noviembre|450|1
+12|Hospital 20 de Noviembre - Insurgentes Sur|725|1
+12|Insurgentes Sur - Mixcoac|651|1
