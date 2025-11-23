@@ -7,6 +7,7 @@ import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,67 +21,61 @@ class ModeloDeVistaPantallaTecnico : ViewModel() {
     private val db: FirebaseFirestore = Firebase.firestore
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    // Dependencia por defecto para pruebas
-    private val _tecnicoDependencia = MutableStateFlow<String?>("Zaragoza")
+    // Estación base del técnico (Ej: "Zaragoza")
+    private val _tecnicoDependencia = MutableStateFlow<String?>("Zaragoza") // Valor default por seguridad
     val tecnicoDependencia: StateFlow<String?> = _tecnicoDependencia.asStateFlow()
 
     private val _listaReportesSistema = MutableStateFlow<List<ModeloReportesBD>>(emptyList())
     val listaReportesSistema: StateFlow<List<ModeloReportesBD>> = _listaReportesSistema.asStateFlow()
 
     init {
-        // EN LUGAR DE ESCUCHAR FIREBASE, CARGAMOS DATOS DE PRUEBA
-        cargarDatosDePrueba()
-
-        // fetchTechnicianDataAndListenForReports() // <-- Descomentar esto cuando quieras volver a usar Firebase real
+        fetchTechnicianDataAndListenForReports()
     }
 
-    private fun cargarDatosDePrueba() {
-        val listaMock = listOf(
-            ModeloReportesBD(
-                idDocumento = "mock_1",
-                tituloReporte = "Falla en Sistema de Frenado",
-                estacionQueTieneReporte = "Pantitlán",
-                descripcionReporteJefeDeEstacion = "El tren no responde al frenado regenerativo en la vía 2.",
-                tipoProblema = 3, // Crítico (Rojo)
-                horaProblema = "08:30",
-                reporteTecnicoRegulador = "Instrucción: Revisar zapatas y sistema neumático de urgencia | Equipo: Kit de frenos, llaves de presión y gato hidráulico",
-                reporteCompletado = 1 // Estado 1: Asignado a técnico
-            ),
-            ModeloReportesBD(
-                idDocumento = "mock_2",
-                tituloReporte = "Cortocircuito en Vías",
-                estacionQueTieneReporte = "Tacubaya",
-                descripcionReporteJefeDeEstacion = "Se observa humo en la zona de vías dirección Observatorio.",
-                tipoProblema = 3, // Crítico (Rojo)
-                horaProblema = "09:15",
-                reporteTecnicoRegulador = "Instrucción: Cortar corriente y verificar aislantes | Equipo: Equipo de protección eléctrica, medidor de voltaje",
-                reporteCompletado = 1
-            ),
-            ModeloReportesBD(
-                idDocumento = "mock_3",
-                tituloReporte = "Escalera eléctrica detenida",
-                estacionQueTieneReporte = "Mixcoac",
-                descripcionReporteJefeDeEstacion = "La escalera 4 se detuvo bruscamente con usuarios.",
-                tipoProblema = 2, // Medio (Amarillo)
-                horaProblema = "10:00",
-                reporteTecnicoRegulador = "Instrucción: Reiniciar sistema y verificar sensores de peso | Equipo: Llaves maestras y laptop de diagnóstico",
-                reporteCompletado = 1
-            ),
-            ModeloReportesBD(
-                idDocumento = "mock_4",
-                tituloReporte = "Luminaria fundida en andén",
-                estacionQueTieneReporte = "Zaragoza",
-                descripcionReporteJefeDeEstacion = "Poca visibilidad en la zona de mujeres.",
-                tipoProblema = 1, // Leve (Verde)
-                horaProblema = "11:45",
-                reporteTecnicoRegulador = "Instrucción: Reemplazo de tubos LED | Equipo: Escalera de tijera y repuestos LED",
-                reporteCompletado = 1
-            )
-        )
-        _listaReportesSistema.value = listaMock
+    private fun fetchTechnicianDataAndListenForReports() {
+        viewModelScope.launch {
+            val user = auth.currentUser
+            if (user != null) {
+                try {
+                    // Consultamos la dependencia del técnico en Firestore
+                    val doc = db.collection("usuariosBD").document(user.uid).get().await()
+                    val dependencia = doc.getString("dependencia")?.replaceFirstChar { it.uppercase() }
+
+                    if (dependencia != null) {
+                        _tecnicoDependencia.value = dependencia
+                    }
+                } catch (e: Exception) {
+                    Log.e("TecnicoVM", "Error obteniendo usuario: ${e.message}")
+                }
+            }
+            // Iniciamos la escucha de reportes reales
+            listenForAssignedReports()
+        }
     }
 
-    // --- LÓGICA DE RUTA Y MAPA (Se mantiene funcional) ---
+    private fun listenForAssignedReports() {
+        // Escucha SOLO reportes en Estado 1 (Enviados por el Regulador)
+        db.collection("reportesBD")
+            .whereEqualTo("reporteCompletado", 1)
+            .orderBy("fechaHoraCreacionReporte", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.e("TecnicoVM", "Error escuchando reportes", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val lista = snapshot.documents.mapNotNull { doc ->
+                        val r = doc.toObject(ModeloReportesBD::class.java)
+                        // Inyectamos el ID del documento para poder actualizarlo luego
+                        r?.copy(idDocumento = doc.id)
+                    }
+                    _listaReportesSistema.value = lista
+                }
+            }
+    }
+
+    // Simulación de cálculo de tiempo para la UI
     fun getBestRouteTime(origen: String, destino: String): Pair<Int, String> {
         val random = Random(System.currentTimeMillis().toInt())
         val tiempoBaseMin = when {
@@ -91,7 +86,7 @@ class ModeloDeVistaPantallaTecnico : ViewModel() {
         return Pair(tiempoOptimo, "Metro/Bus, Vía rápida")
     }
 
-    // --- LÓGICA DE COMPLETADO (Solo simulación si no hay conexión) ---
+    // Acción de Completar: Pasa el reporte a Estado 2
     fun marcarReporteComoSolucionado(
         idDocumento: String,
         onSuccess: () -> Unit,
@@ -99,24 +94,15 @@ class ModeloDeVistaPantallaTecnico : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                // Si es un mock, simulamos el éxito localmente quitándolo de la lista
-                if (idDocumento.startsWith("mock")) {
-                    val actual = _listaReportesSistema.value.toMutableList()
-                    actual.removeAll { it.idDocumento == idDocumento }
-                    _listaReportesSistema.value = actual
-                    onSuccess()
-                } else {
-                    // Si fuera real, usaríamos Firebase
-                    db.collection("reportesBD")
-                        .document(idDocumento)
-                        .update("reporteCompletado", 2)
-                        .await()
-                    onSuccess()
-                }
+                db.collection("reportesBD")
+                    .document(idDocumento)
+                    .update("reporteCompletado", 2)
+                    .await()
+                onSuccess()
             } catch (e: Exception) {
-                Log.e("TecnicoVM", "Error simulado", e)
-                onError("Error al actualizar")
+                onError(e.message ?: "Error al actualizar")
             }
         }
     }
 }
+

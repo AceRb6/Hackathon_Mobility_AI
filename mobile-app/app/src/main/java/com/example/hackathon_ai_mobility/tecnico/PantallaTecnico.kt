@@ -3,10 +3,7 @@ package com.example.hackathon_ai_mobility.tecnico
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
@@ -28,6 +27,11 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+// --- IMPORTACIONES DE TU MAPA ---
+// Asegúrate de que estos paquetes coincidan con tu estructura de carpetas
+import com.example.hackathon_ai_mobility.prueba_mapa.usuario.ScreenDeMetroUsuario
+import com.example.hackathon_ai_mobility.mapatecnico.usuariotecnico.MetroUsuarioViewModel
 
 @Composable
 fun PantallaTecnico(
@@ -37,35 +41,41 @@ fun PantallaTecnico(
 ) {
     val context = LocalContext.current
 
-    // Datos simulados del ViewModel
+    // Datos (Mocks o Reales según tu VM)
     val listaReportes by viewModel.listaReportesSistema.collectAsState()
-    val estacionTecnico by viewModel.tecnicoDependencia.collectAsState() // "Zaragoza" por defecto en el mock
+    val estacionTecnico by viewModel.tecnicoDependencia.collectAsState()
 
-    // Filtro (aunque el mock ya trae solo los de estado 1)
+    // Filtro de seguridad (Estado 1 = Asignado)
     val reportesAsignados = remember(listaReportes) {
         listaReportes.filter { it.reporteCompletado == 1 }
     }
 
-    // UI
+    // Lógica de Notificaciones
+    var inicializado by remember { mutableStateOf(false) }
+    var ultimoTamano by remember { mutableStateOf(0) }
+
+    LaunchedEffect(reportesAsignados.size) {
+        if (!inicializado) {
+            ultimoTamano = reportesAsignados.size
+            inicializado = true
+        } else {
+            if (reportesAsignados.size > ultimoTamano) {
+                repetirAlertasNuevoReporte(context)
+            }
+            ultimoTamano = reportesAsignados.size
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Black)
             .padding(16.dp)
     ) {
-        Text(
-            "Técnico - Tareas Asignadas",
-            color = Color.White,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text("Técnico - Tareas", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
 
-        Text(
-            text = "Base: ${estacionTecnico ?: "Central"}",
-            color = Color.Yellow,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(bottom = 16.dp, top = 4.dp)
-        )
+        val base = estacionTecnico ?: "Zaragoza"
+        Text("Base Operativa: $base", color = Color.Yellow, fontSize = 16.sp, modifier = Modifier.padding(bottom = 16.dp, top = 4.dp))
 
         Button(
             onClick = { navegarPantallaInicial() },
@@ -77,7 +87,7 @@ fun PantallaTecnico(
 
         if (reportesAsignados.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No hay tareas asignadas.", color = Color.Gray)
+                Text("Sin tareas pendientes", color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -88,7 +98,7 @@ fun PantallaTecnico(
                     ItemReporteTecnico(
                         reporte = reporte,
                         viewModel = viewModel,
-                        estacionTecnico = estacionTecnico ?: "CDMX"
+                        estacionBase = base
                     )
                 }
             }
@@ -100,102 +110,139 @@ fun PantallaTecnico(
 fun ItemReporteTecnico(
     reporte: ModeloReportesBD,
     viewModel: ModeloDeVistaPantallaTecnico,
-    estacionTecnico: String
+    estacionBase: String
 ) {
-    val context = LocalContext.current
     var mostrarConfirmacion by remember { mutableStateOf(false) }
+    var mostrarMapaInterno by remember { mutableStateOf(false) } // Controla el diálogo del mapa
     var marcando by remember { mutableStateOf(false) }
+    var mostrarDetalles by remember { mutableStateOf(false) }
 
-    // Cálculo de ruta (Simulado)
     val destino = reporte.estacionQueTieneReporte ?: "Destino"
-    val (tiempoRuta, modoRuta) = viewModel.getBestRouteTime(estacionTecnico, destino)
 
-    // Parseo de texto
-    val instruccion = reporte.reporteTecnicoRegulador?.substringAfter("Instrucción:")?.substringBefore("|")?.trim() ?: ""
-    val equipo = reporte.reporteTecnicoRegulador?.substringAfter("| Equipo:")?.trim() ?: ""
+    // Cálculo de tiempo (Simulado para la tarjeta)
+    val (tiempo, modo) = viewModel.getBestRouteTime(estacionBase, destino)
 
-    val colorPrioridad = when (reporte.tipoProblema) {
-        3 -> Color(0xFFF44336) // Rojo
-        2 -> Color(0xFFFFC107) // Amarillo
-        else -> Color(0xFF4CAF50) // Verde
+    // Parseo de texto del regulador
+    val instruccion = reporte.reporteTecnicoRegulador?.substringAfter("Instrucción:")?.substringBefore("|")?.trim() ?: "N/A"
+    val equipo = reporte.reporteTecnicoRegulador?.substringAfter("| Equipo:")?.trim() ?: "N/A"
+
+    val colorPrioridad = when (reporte.tipoProblema) { 3 -> Color.Red; 2 -> Color(0xFFFFC107); else -> Color(0xFF4CAF50) }
+
+    val fecha = remember(reporte.fechaHoraCreacionReporte) {
+        try {
+            val d = reporte.fechaHoraCreacionReporte?.toDate()
+            if(d!=null) SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(d) else "-"
+        } catch (e: Exception) { "-" }
     }
 
-    val tituloPrioridad = when (reporte.tipoProblema) {
-        3 -> "ALTA / CRÍTICA"
-        2 -> "MEDIA"
-        else -> "BAJA"
-    }
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)), modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Cabecera
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(reporte.estacionQueTieneReporte ?: "-", color = Color.Cyan, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Surface(color = colorPrioridad, shape = MaterialTheme.shapes.small) {
-                    Text(tituloPrioridad, color = if(reporte.tipoProblema == 2) Color.Black else Color.White, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontWeight = FontWeight.Bold)
-                }
+                Text("Ir a: $destino", color = Color.Cyan, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(fecha, color = Color.LightGray, fontSize = 12.sp)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
             Text("Problema: ${reporte.tituloReporte}", color = Color.White, fontWeight = FontWeight.Bold)
-            Text("Hora: ${reporte.horaProblema}", color = Color.Gray, fontSize = 12.sp)
+            Text("Nivel Prioridad: ${reporte.tipoProblema}", color = colorPrioridad, fontWeight = FontWeight.SemiBold)
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
 
-            // Ruta
-            Text("RUTA SUGERIDA (Desde $estacionTecnico)", color = Color.Yellow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Text("RUTA SUGERIDA", color = Color.Yellow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("$tiempoRuta min", color = Color.Red, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("$estacionBase ➝ ", color = Color.LightGray, fontSize = 13.sp)
+                Text("~$tiempo min", color = Color.Red, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 Spacer(Modifier.width(8.dp))
-                Text("via $modoRuta", color = Color.LightGray, fontSize = 12.sp)
+                Text("($modo)", color = Color.LightGray, fontSize = 12.sp)
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
 
-            // Instrucciones
-            Text("Instrucción:", color = Color.Green, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text(instruccion, color = Color.White, fontSize = 14.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Equipo:", color = Color.Green, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text(equipo, color = Color.White, fontSize = 14.sp)
+            TextButton(onClick = { mostrarDetalles = !mostrarDetalles }) {
+                Text(if (mostrarDetalles) "Ocultar Instrucciones" else "Ver Instrucciones", color = Color.Green)
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (mostrarDetalles) {
+                Text("Instrucción: $instruccion", color = Color.White, fontSize = 14.sp)
+                Text("Equipo: $equipo", color = Color.White, fontSize = 14.sp)
+                Spacer(Modifier.height(8.dp))
+            }
 
-            // BOTONES
+            // Botones
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Botón Mapa
+                // BOTÓN VER MAPA (Abre tu ScreenDeMetroUsuario)
                 Button(
-                    onClick = {
-                        // Lanza Google Maps con la ruta
-                        lanzarGoogleMapsIntent(context, estacionTecnico, destino)
-                    },
+                    onClick = { mostrarMapaInterno = true },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF039BE5))
                 ) {
-                    Text("Ver Mapa 🗺️")
+                    Text("Ver Ruta 🗺️", fontSize = 12.sp)
                 }
 
-                // Botón Solucionado
+                // BOTÓN COMPLETAR
                 Button(
                     onClick = { mostrarConfirmacion = true },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
-                    Text("Completar")
+                    Text("Completar", fontSize = 12.sp)
                 }
             }
         }
     }
 
-    // Diálogo
+    // --- DIÁLOGO A PANTALLA COMPLETA CON EL MAPA ---
+    if (mostrarMapaInterno) {
+        Dialog(
+            onDismissRequest = { mostrarMapaInterno = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false) // Ocupa toda la pantalla
+        ) {
+            Scaffold(
+                containerColor = Black,
+                topBar = {
+                    // Barra superior flotante para cerrar el mapa
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF222222))
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Ruta Asignada", color = Color.Gray, fontSize = 12.sp)
+                            Text("$estacionBase ➝ $destino", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                        IconButton(onClick = { mostrarMapaInterno = false }) {
+                            Text("❌", fontSize = 24.sp, color = Color.White)
+                        }
+                    }
+                }
+            ) { padding ->
+                Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+                    // Instanciamos el ViewModel específico del mapa
+                    val mapaViewModel: MetroUsuarioViewModel = viewModel()
+
+                    // LLAMADA A TU SCREEN EXISTENTE
+                    ScreenDeMetroUsuario(
+                        viewModel = mapaViewModel,
+                        origenInicial = estacionBase,
+                        destinoInicial = destino,
+                        // Callbacks opcionales
+                        onRutaCalculada = { _, _, _, _ -> },
+                        onRutaLimpiada = { }
+                    )
+                }
+            }
+        }
+    }
+
+    // Diálogo Confirmación de Solución
     if (mostrarConfirmacion) {
         AlertDialog(
             onDismissRequest = { mostrarConfirmacion = false },
-            title = { Text("Confirmar Finalización") },
-            text = { Text("¿El problema en $destino ha sido resuelto?") },
+            title = { Text("Confirmar Solución") },
+            text = { Text("¿El problema ha sido resuelto?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -206,8 +253,8 @@ fun ItemReporteTecnico(
                             onError = { marcando = false }
                         )
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047))
-                ) { Text("Confirmar") }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                ) { Text("Sí") }
             },
             dismissButton = {
                 TextButton(onClick = { mostrarConfirmacion = false }) { Text("Cancelar") }
@@ -216,30 +263,22 @@ fun ItemReporteTecnico(
     }
 }
 
-/**
- * Lanza la aplicación de Google Maps.
- */
-fun lanzarGoogleMapsIntent(context: Context, origen: String, destino: String) {
-    try {
-        // Intentamos abrir navegación en transporte público
-        val uri = Uri.parse("google.navigation:q=${Uri.encode(destino + " Metro CDMX")}&mode=transit")
-        val mapIntent = Intent(Intent.ACTION_VIEW, uri)
-        mapIntent.setPackage("com.google.android.apps.maps")
-
-        if (mapIntent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(mapIntent)
-        } else {
-            // Fallback al navegador
-            val webUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=${Uri.encode(origen)}&destination=${Uri.encode(destino)}&travelmode=transit")
-            val webIntent = Intent(Intent.ACTION_VIEW, webUri)
-            context.startActivity(webIntent)
-        }
-    } catch (e: Exception) {
-        Log.e("MAPS", "Error maps: ${e.message}")
-    }
-}
-
 suspend fun repetirAlertasNuevoReporte(context: Context) {
-    // ... (Misma implementación de notificación que tenías) ...
-    // Para ahorrar espacio, solo asegúrate de copiar la función que te di antes aquí
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val channelId = "canal_alertas_tecnico"
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(channelId, "Alertas Técnico", NotificationManager.IMPORTANCE_HIGH)
+        notificationManager.createNotificationChannel(channel)
+    }
+    val builder = NotificationCompat.Builder(context, channelId)
+        .setSmallIcon(android.R.drawable.ic_dialog_alert)
+        .setContentTitle("🚨 Tarea Pendiente")
+        .setContentText("Revisa tu lista de asignaciones.")
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+
+    repeat(3) {
+        notificationManager.notify(2000 + it, builder.build())
+        delay(15_000L)
+    }
 }
