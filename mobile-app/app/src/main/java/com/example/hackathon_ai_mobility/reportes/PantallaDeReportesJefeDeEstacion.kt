@@ -1,101 +1,59 @@
 package com.example.hackathon_ai_mobility.reportes
 
-
-import androidx.compose.foundation.layout.heightIn
-
+import android.app.TimePickerDialog
+import android.widget.TimePicker
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold // IMPORTANTE
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.example.hackathon_ai_mobility.ui.theme.FieldActivado
-import com.example.hackathon_ai_mobility.ui.theme.FieldDesactivado
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.MutableState
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hackathon_ai_mobility.modelos.EstacionBD
-import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.ButtonDefaults
-import android.app.TimePickerDialog
-import android.widget.TimePicker
-import androidx.compose.ui.platform.LocalContext
+import com.example.hackathon_ai_mobility.ui.theme.FieldActivado
+import com.example.hackathon_ai_mobility.ui.theme.FieldDesactivado
+import com.google.firebase.auth.FirebaseAuth
 import java.util.Calendar
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-
-
 
 @Composable
 fun PantallaDeReportesJefeDeEstacion(
-
-
     auth: FirebaseAuth,
     viewmodel: ModeloDeVistaPantallaJefeDeEstacion = viewModel(),
     navegarPantallaInicial: () -> Unit = {}
-
-
 ){
-
-    //AQUI EMPIEZA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
-    val variableParaParaConsumirViewmodel: State<List<ModeloReportesBD>> = viewmodel.listaReportesBD.collectAsState()
-
-    //esto es para agregar nuevos artistas
-    val nombre = remember { mutableStateOf("") }
-    //val descripcion = remember { mutableStateOf("") }
-    val imagenUrl = remember { mutableStateOf("") }
-    //--->val estacion  tengo que crear esta BD
-
-    //AQUI TERMINA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
-
-    ///////// Variables de la nueva pantalla de Jefe de estación //////////////////////////
-
-    //Variable de el problema
+    // Variables de la pantalla
     val problema = remember { mutableStateOf("") }
-
-    //Variable de la seccion DESCRIPCIN
     val descripcion = remember { mutableStateOf("") }
-
-    //Varible de tipo
     val tipo = remember { mutableStateOf(0)}
-
-    //Variable de hora de inicio
     val hora = remember { mutableStateOf("") }
-
-    //Variable de equpo
-    //val equipo = remember { mutableStateOf("") }
-
-    //Variable estacion del metro
     val estacionMetro = remember { mutableStateOf("") }
-
-    ///////////////////////////////////////////////////////Aqui acaban las variables///////////////////////////////
-
-    //Esto es para Crear el reporte ya con la estacion seleccionada------------------
 
     // Estaciones desde Firestore
     val listaEstaciones by viewmodel.listaEstacionesBD.collectAsState()
@@ -108,242 +66,149 @@ fun PantallaDeReportesJefeDeEstacion(
     var mostrarDialogoEstacionCerrada by remember { mutableStateOf(false) }
     var mostrarDialogoGracias by remember { mutableStateOf(false) }
 
-    //FIN Crear el reporte ya con la estacion seleccionada------------------
+    // --- SOLUCIÓN: SCAFFOLD PARA GESTIONAR LOS BORDES ---
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Black // El color de fondo va aquí ahora
+    ) { innerPadding ->
+        // 'innerPadding' contiene el margen calculado automáticamente (barra estado + barra navegación)
 
+        Column(
+            Modifier
+                .padding(innerPadding) // APLICAMOS EL MARGEN AQUÍ
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
 
-
-
-    /////////////AQUI EMPIEZA EL MAQUETADO DEL BACKGROUND DE PANTALLADEREPORTESJEFEDEESTACION
-
-    Column(
-
-        Modifier
-            .fillMaxSize()
-            .background(Black)
-            .verticalScroll(rememberScrollState())
-
-    ) {
-
-        //TITULO DE LA PANTALLA
-        Text(
-            "Jefe de estación",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 30.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-        //FIN TITULO DE LA PANTALLA
-
-
-
-        //BOTON PARA IR A PANTALLA PRINCIPAL
-        Button(onClick = {
-
-           // navegarPantallaPrincipal()
-
-        }) {
-
-            Text("Ir a Pantalla principal")
-
-        }
-        //FINAL BOTON PARA IR A PANTALLA PRINCIPAL
-
-        //BOTON PARA IR A Reportes Usuario-----------
-        Button(onClick = {
-
-            //navegarPantallaMisReportesUsuario()
-
-        }) {
-
-            Text("Ir a Pantalla Mis Reportes")
-
-        }
-        //FINAL BOTON PARA IR A Reportes UsuarioL------------
-
-
-        //INICIO ESCOGER ESTACION
-                Text(
-                    "Selecciona estacion",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 25.sp,
-                    modifier = Modifier.padding(16.dp)
-                )
-
-                BuscadorEstacion(
-                    texto = textoEstacion,
-                    onTextoChange = { nuevoTexto ->
-                        textoEstacion = nuevoTexto
-                        estacionSeleccionada = null // se limpia si están escribiendo otra cosa
-                    },
-                    estaciones = listaEstaciones,
-                    onEstacionElegida = { estacion ->
-                        // aquí validamos si está abierta
-                        if (estacion.abierta == 1) {
-                            estacionSeleccionada = estacion
-                        } else {
-                            estacionSeleccionada = null
-                            mostrarDialogoEstacionCerrada = true
-                        }
-                    }
-                )
-                //FINAL ESCOGER ESTACION */
-
-
-        //INICIO CUADRO DE PROBLEMA
-        Text(
-            "Titulo del problema",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        ProblemaField(
-            problema = problema.value,
-            onProblemaChange = { nuevoProblema ->
-                problema.value = nuevoProblema
-            }
-        )
-
-
-        //FINAL CUADRO DE TEXTO DE Problema
-
-        //INICIO CUADRO DE TEXTO DESCRIPCION DEL PROBLEMA
-        Text(
-            "Descripcion del problema",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        DescripcionField(
-            descripcion = descripcion.value,
-            onDescripcionChange = { nuevaDescripcion ->
-                descripcion.value = nuevaDescripcion
-            }
-        )
-
-
-        //FINAL CUADRO DE TEXTO DESCRIPCION DEL PROBLEMA
-
-
-        //INICIO CUADRO DE Equipo
-        /*Text(
-            "Equipo",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        EquipoField(
-            equipo = equipo.value,
-            onEquipoChange = { nuevoEquipo ->
-                equipo.value = nuevoEquipo
-            }
-        )*/
-
-        // Inicio de tipo
-        /*
-        Row {
-            listOf(0, 1, 2).forEach { value ->
-                Button(
-                    onClick = { tipo.value = value },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor =
-                            if (tipo.value == value) Color.Blue else Color.Gray
-                    ),
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Text(value.toString())
-                }
-            }
-        }
-        */
-
-        //FINAL DE TIPO
-
-        // INICIO DE HORAINICIO
-        Text(
-            "Hora",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        HoraPickerField(hora)
-        // FINAL DE HORAINICIO
-
-        // INICIO DE SELECCIONAR ESTACION
-
-
-
-        // FINAL DE SELECCIONAR ESTACION
-
-        //BOTON PARA CREAR REPORTE
-        Button(onClick = {
-
-            val estacionNombre = estacionSeleccionada?.nombre
-
-            // Si no se seleccionó estación, simplemente no dejamos continuar
-            if (estacionNombre.isNullOrBlank()) {
-                // aquí podrías poner otro diálogo/snackbar si quieres
-                return@Button
-            }
-
-            // Crear el reporte con estación + descripción
-            viewmodel.cargarDatosReportes(
-                descripcionReporte = descripcion.value,
-                estacionSeleccionada = estacionNombre,
-                horaCuandoEsmpezoProblema = hora.value,
-                tipodelproblema = tipo.value,
-                reporteTecnico = "",   // aquí podrías luego meter un campo de texto
-                reporteStatus = 0      // 0 = pendiente, 1 = completado, por ejemplo
+            // TITULO DE LA PANTALLA
+            Text(
+                "Jefe de estación",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                modifier = Modifier.padding(16.dp)
             )
 
-            // Mostrar mensaje de agradecimiento
-            mostrarDialogoGracias = true
-
-
-            //viewmodel.cargarDatosReportes()
-            //viewmodel.cargarDatosReportes(descripcion.value)
-
-        }) {
-
-            Text("Añadir reporte")
-
-        }
-        //FINAL BOTON PARA CREAR REPORTE
-
-        //COLUMNA PARA VER LOS REPORTES
-        /*LazyColumn(
-            contentPadding = PaddingValues(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp) // ya damos padding en cada card
-        ){
-
-            items(variableParaParaConsumirViewmodel.value) {
-
-                ItemReporte(it)
-
-
-
+            // BOTON PARA SALIR (Ir a Pantalla principal / Cerrar Sesión)
+            Button(
+                onClick = { navegarPantallaInicial() },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Text("Cerrar Sesión")
             }
 
-        }*/
-        //FIN COLUMNA PARA VER LOS REPORTES
+            // BOTON PARA IR A Reportes Usuario (Placeholder)
+            Button(
+                onClick = { /* navegarPantallaMisReportesUsuario() */ },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Ir a Pantalla Mis Reportes")
+            }
 
+            // BUSCADOR DE ESTACIÓN
+            Text(
+                "Selecciona estación",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 25.sp,
+                modifier = Modifier.padding(16.dp)
+            )
 
+            BuscadorEstacion(
+                texto = textoEstacion,
+                onTextoChange = { nuevoTexto ->
+                    textoEstacion = nuevoTexto
+                    estacionSeleccionada = null
+                },
+                estaciones = listaEstaciones,
+                onEstacionElegida = { estacion ->
+                    if (estacion.abierta == 1) {
+                        estacionSeleccionada = estacion
+                        // Actualizamos también la variable visual si quieres
+                        estacionMetro.value = estacion.nombre ?: ""
+                    } else {
+                        estacionSeleccionada = null
+                        mostrarDialogoEstacionCerrada = true
+                    }
+                }
+            )
 
+            // CAMPO: TITULO PROBLEMA
+            Text(
+                "Titulo del problema",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 25.sp,
+                modifier = Modifier.padding(16.dp)
+            )
 
+            ProblemaField(
+                problema = problema.value,
+                onProblemaChange = { problema.value = it }
+            )
 
+            // CAMPO: DESCRIPCIÓN
+            Text(
+                "Descripción del problema",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 25.sp,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            DescripcionField(
+                descripcion = descripcion.value,
+                onDescripcionChange = { descripcion.value = it }
+            )
+
+            // CAMPO: HORA
+            Text(
+                "Hora de inicio",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 25.sp,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            HoraPickerField(hora)
+
+            // Espacio final antes del botón
+            //Spacer(modifier = Modifier.height(24.dp))
+
+            // BOTON AÑADIR REPORTE
+            Button(
+                onClick = {
+                    val estacionNombre = estacionSeleccionada?.nombre
+
+                    if (estacionNombre.isNullOrBlank()) {
+                        return@Button
+                    }
+
+                    viewmodel.cargarDatosReportes(
+                        descripcionReporte = descripcion.value,
+                        estacionSeleccionada = estacionNombre,
+                        horaCuandoEsmpezoProblema = hora.value,
+                        tipodelproblema = tipo.value,
+                        reporteTecnico = "",
+                        reporteStatus = 0 // Pendiente
+                    )
+                    mostrarDialogoGracias = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .heightIn(min = 50.dp) // Altura mínima para buen touch
+            ) {
+                Text("Añadir reporte", fontSize = 18.sp)
+            }
+
+            // Espacio extra al final para que el scroll no quede justo
+            //Spacer(modifier = Modifier.height(50.dp))
+        }
     }
-    //AQUI TERMINA EL MAQUETADO DEL BACKGROUND DE PANTALLAREPORTESUSUARIO
 
-/*
-    // Diálogos DE ESTACION CERRADADA
+    // --- DIÁLOGOS ---
+
     if (mostrarDialogoEstacionCerrada) {
         AlertDialog(
             onDismissRequest = { mostrarDialogoEstacionCerrada = false },
@@ -353,150 +218,84 @@ fun PantallaDeReportesJefeDeEstacion(
                 }
             },
             title = { Text("Estación cerrada") },
-            text = { Text("Esta estación ya se encuentra cerrada, gracias por tu ayuda") }
+            text = { Text("Esta estación ya se encuentra cerrada.") }
         )
     }
-    //FIN Diálogos DE ESTACION CERRADADA
-*/
-    //DIALOGOS CREACION DE REPORTE CORRECTO
+
     if (mostrarDialogoGracias) {
         AlertDialog(
-            onDismissRequest = { /* no hacer nada para obligar a elegir */ },
+            onDismissRequest = { },
             confirmButton = {
                 TextButton(onClick = {
                     mostrarDialogoGracias = false
-                    //navegarPantallaPrincipal()  // regreso a pantalla principal
+                    // Opcional: Limpiar campos
+                    problema.value = ""
+                    descripcion.value = ""
+                    hora.value = ""
+                    textoEstacion = ""
+                    estacionSeleccionada = null
                 }) {
                     Text("Continuar")
                 }
             },
             title = { Text("¡Gracias!") },
-            text = { Text("Tu reporte se ha enviado correctamente. ¡Gracias por tu ayuda!") }
+            text = { Text("Tu reporte se ha enviado correctamente al Regulador.") }
         )
     }
-
-    //FIN DIALOGOS CREACION DE REPORTE CORRECTO
-
-
 }
+
+// ... (Tus funciones ProblemaField, DescripcionField, HoraPickerField, BuscadorEstacion se mantienen igual abajo) ...
+// COPIA Y PEGA TUS FUNCIONES AUXILIARES AQUÍ ABAJO SI NO LAS TIENES EN OTRO ARCHIVO
+// (ProblemaField, DescripcionField, HoraPickerField, BuscadorEstacion)
 @Composable
 fun ProblemaField(
     problema: String,
     onProblemaChange: (String) -> Unit
 ){
-    // var descripcion by remember { mutableStateOf("") }
     val maxLength = 350
-
-
-
     OutlinedTextField(
         value = problema,
-        onValueChange = { textoReporte: String ->
-            if (textoReporte.length <= maxLength) {
-                onProblemaChange(textoReporte)
-            }
-        },
+        onValueChange = { if (it.length <= maxLength) onProblemaChange(it) },
         label = { Text("Problema") },
-        placeholder = { Text("Escribe que Problema hay...") },
+        placeholder = { Text("Escribe qué problema hay...") },
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 300.dp, max = 300.dp),
-        maxLines = 10,
-        singleLine = false,
+            .heightIn(min = 100.dp, max = 150.dp), // Ajusté altura para estética
+        maxLines = 5,
         colors = TextFieldDefaults.colors(
-
             unfocusedContainerColor = FieldDesactivado,
             focusedContainerColor = FieldActivado
-
-
         ),
-        supportingText = {
-            Text("${problema.length} / $maxLength")
-        }
+        supportingText = { Text("${problema.length} / $maxLength") }
     )
-
 }
-
 
 @Composable
 fun DescripcionField(
     descripcion: String,
     onDescripcionChange: (String) -> Unit
 ) {
-    // var descripcion by remember { mutableStateOf("") }
     val maxLength = 350
-
-
-
     OutlinedTextField(
         value = descripcion,
-        onValueChange = { textoReporte: String ->
-            if (textoReporte.length <= maxLength) {
-                onDescripcionChange(textoReporte)
-            }
-        },
+        onValueChange = { if (it.length <= maxLength) onDescripcionChange(it) },
         label = { Text("Descripción") },
-        placeholder = { Text("Escribe una descripción...") },
+        placeholder = { Text("Detalles técnicos...") },
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 300.dp, max = 300.dp),
+            .heightIn(min = 150.dp, max = 200.dp),
         maxLines = 10,
-        singleLine = false,
         colors = TextFieldDefaults.colors(
-
             unfocusedContainerColor = FieldDesactivado,
             focusedContainerColor = FieldActivado
-
-
         ),
-        supportingText = {
-            Text("${descripcion.length} / $maxLength")
-        }
+        supportingText = { Text("${descripcion.length} / $maxLength") }
     )
-}
-
-
-@Composable
-fun EstacionMetroSelector(
-    estacionMetro: MutableState<String>,
-    estaciones: List<String>
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Column {
-        OutlinedTextField(
-            value = estacionMetro.value,
-            onValueChange = {},
-            label = { Text("Estación del Metro") },
-            placeholder = { Text("Seleccione una estación") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            readOnly = true
-        )
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            estaciones.forEach { estacion ->
-                DropdownMenuItem(
-                    text = { Text(estacion) },
-                    onClick = {
-                        estacionMetro.value = estacion
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
 }
 
 @Composable
 fun HoraPickerField(hora: MutableState<String>) {
-
     val context = LocalContext.current
-
     OutlinedTextField(
         value = hora.value,
         onValueChange = { },
@@ -505,85 +304,25 @@ fun HoraPickerField(hora: MutableState<String>) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                // Hora actual como valor inicial
                 val calendar = Calendar.getInstance()
                 val hour = calendar.get(Calendar.HOUR_OF_DAY)
                 val minute = calendar.get(Calendar.MINUTE)
-
                 TimePickerDialog(
                     context,
-                    { _: TimePicker, selectedHour: Int, selectedMinute: Int ->
-                        hora.value = "%02d:%02d".format(selectedHour, selectedMinute)
-                    },
-                    hour,
-                    minute,
-                    true // true = formato 24h
+                    { _, h, m -> hora.value = "%02d:%02d".format(h, m) },
+                    hour, minute, true
                 ).show()
             },
-        readOnly = true
+        readOnly = true,
+        enabled = false, // Truco: deshabilitar input directo, pero el clickable del modifier sí funciona
+        colors = TextFieldDefaults.colors(
+            disabledContainerColor = FieldDesactivado,
+            disabledTextColor = Color.White,
+            disabledLabelColor = Color.Gray
+        )
     )
 }
 
-
-/*
-@Composable
-fun BuscadorEstacion(
-    texto: String,
-    onTextoChange: (String) -> Unit,
-    estaciones: List<EstacionBD>,
-    onEstacionElegida: (EstacionBD) -> Unit
-) {
-    Column {
-        OutlinedTextField(
-            value = texto,
-            onValueChange = { onTextoChange(it) },
-            label = { Text("Nombre de la estación") },
-            placeholder = { Text("Escribe el nombre de la estación") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp),
-            singleLine = true,
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = FieldDesactivado,
-                focusedContainerColor = FieldActivado
-            )
-        )
-
-        val sugerencias = remember(texto, estaciones) {
-            if (texto.isBlank()) {
-                emptyList()
-            } else {
-                estaciones
-                    .filter { estacion ->
-                        estacion.nombre?.startsWith(texto, ignoreCase = true) == true
-                    }
-                    .sortedBy { it.nombre }
-                    .take(5)
-            }
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 180.dp)
-        ) {
-            items(sugerencias) { estacion ->
-                Text(
-                    text = estacion.nombre.orEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onTextoChange(estacion.nombre.orEmpty())
-                            onEstacionElegida(estacion)
-                        }
-                        .padding(8.dp),
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
-*/
 @Composable
 fun BuscadorEstacion(
     texto: String,
@@ -596,20 +335,15 @@ fun BuscadorEstacion(
     Column {
         OutlinedTextField(
             value = texto,
-            onValueChange = { nuevoTexto ->
-                onTextoChange(nuevoTexto)
-                // Cada vez que escribe, volvemos a mostrar las sugerencias
+            onValueChange = {
+                onTextoChange(it)
                 mostrarSugerencias = true
             },
             label = { Text("Nombre de la estación") },
-            placeholder = { Text("Escribe el nombre de la estación") },
+            placeholder = { Text("Escribe para buscar...") },
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .onFocusChanged { focusState ->
-                    // Si tiene foco y hay texto, mostramos sugerencias
-                    mostrarSugerencias = focusState.isFocused && texto.isNotBlank()
-                },
+                .onFocusChanged { if(it.isFocused) mostrarSugerencias = true },
             singleLine = true,
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = FieldDesactivado,
@@ -618,41 +352,29 @@ fun BuscadorEstacion(
         )
 
         val sugerencias = remember(texto, estaciones) {
-            if (texto.isBlank()) {
-                emptyList()
-            } else {
-                estaciones
-                    .filter { estacion ->
-                        estacion.nombre?.startsWith(texto, ignoreCase = true) == true
-                    }
-                    .sortedBy { it.nombre }
-                    .take(5)
-            }
+            if (texto.isBlank()) emptyList()
+            else estaciones.filter {
+                it.nombre?.startsWith(texto, ignoreCase = true) == true
+            }.take(5)
         }
 
         if (mostrarSugerencias && sugerencias.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 180.dp)
-            ) {
-                items(sugerencias) { estacion ->
+            Column(Modifier.background(Color.DarkGray)) { // Fondo para sugerencias
+                sugerencias.forEach { estacion ->
                     Text(
                         text = estacion.nombre.orEmpty(),
+                        color = Color.White,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
                                 onTextoChange(estacion.nombre.orEmpty())
                                 onEstacionElegida(estacion)
-                                // Al elegir, escondemos las opciones
                                 mostrarSugerencias = false
                             }
-                            .padding(8.dp),
-                        color = Color.White
+                            .padding(12.dp)
                     )
                 }
             }
         }
     }
 }
-
