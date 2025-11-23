@@ -185,6 +185,7 @@ fun PantallaDeReportesJefeDeEstacion(
                     }
 
                     viewmodel.cargarDatosReportes(
+                        tituloReporte = problema.value,
                         descripcionReporte = descripcion.value,
                         estacionSeleccionada = estacionNombre,
                         horaCuandoEsmpezoProblema = hora.value,

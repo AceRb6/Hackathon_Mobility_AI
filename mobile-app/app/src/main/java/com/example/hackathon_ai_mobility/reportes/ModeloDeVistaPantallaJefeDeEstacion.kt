@@ -150,10 +150,10 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
 
 
     fun cargarDatosReportes(
+        tituloReporte: String,
         descripcionReporte: String,
         estacionSeleccionada: String,
         horaCuandoEsmpezoProblema: String,
-        //descripcionReporte: String,
         tipodelproblema: Int,
         reporteTecnico: String,
         reporteStatus: Int
@@ -172,6 +172,7 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
              */
             //nombreDeUsuarioCreadorReporte = "Random $random",
             nombreDeJefeDeEstacionCreadorReporte = usuarioActual?.email ?: "Usuario desconocido",
+            tituloReporte = tituloReporte,
             estacionQueTieneReporte = estacionSeleccionada,
             horaProblema = horaCuandoEsmpezoProblema,
             descripcionReporteJefeDeEstacion = descripcionReporte,
@@ -180,7 +181,7 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
             reporteCompletado = reporteStatus
 
 
-            )
+        )
         db.collection("reportesBD")
             .add(objetoReporteDeViewmodel)
             .addOnSuccessListener {
