@@ -26,10 +26,10 @@ class ModeloDeVistaRegulador : ViewModel() {
     }
 
     /**
-     * Escucha en tiempo real la colección "reportesDB".
+     * Escucha en tiempo real la colección "reportesBD".
      */
     private fun escucharReportesEnTiempoReal() {
-        // CAMBIO: Ahora apunta a "reportesDB"
+        // Escucha cambios en la colección "reportesBD"
         db.collection("reportesBD")
             .orderBy("fechaHoraCreacionReporte", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
@@ -46,7 +46,7 @@ class ModeloDeVistaRegulador : ViewModel() {
     }
 
     /**
-     * Actualiza el reporte existente en "reportesDB".
+     * Actualiza el reporte existente en "reportesBD".
      */
     fun completarReporteTecnico(
         idDocumento: String,
@@ -72,8 +72,8 @@ class ModeloDeVistaRegulador : ViewModel() {
                     "reporteCompletado" to 1 // 1 = Completado/Cerrado
                 )
 
-                // CAMBIO: Ahora actualiza en "reportesDB"
-                db.collection("reportesDB")
+                // Actualiza en la colección correcta "reportesBD"
+                db.collection("reportesBD")
                     .document(idDocumento)
                     .update(actualizaciones)
                     .await()
