@@ -38,6 +38,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 
+
 @Composable
 fun PantallaDeReportesJefeDeEstacion(
 
@@ -68,17 +69,34 @@ fun PantallaDeReportesJefeDeEstacion(
     //Variable de el problema
     val problema = remember { mutableStateOf("" }
 
-    //Variable de la seccion DESCRIPCION DEL REPORTE
+    //Variable de la seccion DESCRIPCION
     val descripcion = remember { mutableStateOf("") }
 
+    //Varible de tipo
+    val tipo = remember { mutableStateOf(0)}
+
     //Variable de hora de inicio
-    val horaInicio = remember { System.currentTimeMillis() }
+    val hora = remember { mutableStateOf("") }
 
     //Variable de equpo
     val equipo = remember { mutableStateOf("" }
 
-    //Variable de localización
-    val localizacion = remember { mutableStateOf("" } //Esto tiene que cambiar
+    //Variable estacion del metro
+    val estacionMetro = remember { mutableStateOf("") }
+
+
+    val estaciones = listOf(
+        "Pantitlán",
+        "Zaragoza",
+        "Gómez Farías",
+        "Boulevard Puerto Aéreo",
+        "Balbuena",
+        "Moctezuma",
+        "San Lázaro",
+        "Candelaria",
+        "Merced",
+        "Pino Suárez"
+    )
     ///////////////////////////////////////////////////////Aqui acaban las variables///////////////////////////////
 
     //Esto es para Crear el reporte ya con la estacion seleccionada------------------
@@ -99,7 +117,7 @@ fun PantallaDeReportesJefeDeEstacion(
 
 
 
-    //AQUI EMPIEZA EL MAQUETADO DEL BACKGROUND DE PANTALLAREPORTESUSUARIO
+    /////////////AQUI EMPIEZA EL MAQUETADO DEL BACKGROUND DE PANTALLADEREPORTESJEFEDEESTACION
     Column(
 
         Modifier
@@ -183,10 +201,10 @@ fun PantallaDeReportesJefeDeEstacion(
             modifier = Modifier.padding(16.dp)
         )
 
-        DescripcionField(
-            problema = descripcion.value,
-            onDescripcionChange = { nuevaDescripcion ->
-                descripcion.value = nuevaDescripcion
+        ProblemaField(
+            problema = problema.value,
+            onProblemaChange = { nuevoProblema ->
+                problema.value = nuevoProblema
             }
         )
 
@@ -211,6 +229,61 @@ fun PantallaDeReportesJefeDeEstacion(
 
 
         //FINAL CUADRO DE TEXTO DESCRIPCION DEL PROBLEMA
+
+
+        //INICIO CUADRO DE Equipo
+        Text(
+            "Equipo",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 25.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        EquipoField(
+            equipo = equipo.value,
+            onEquipoChange = { nuevoEquipo ->
+                equipo.value = nuevoEquipo
+            }
+        )
+
+        // Inicio de tipo
+        Row {
+            listOf(0, 1, 2).forEach { value ->
+                Button(
+                    onClick = { tipo.value = value },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor =
+                            if (tipo.value == value) Color.Blue else Color.Gray
+                    ),
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text(value.toString())
+                }
+            }
+        }
+
+
+        //FINAL DE TIPO
+
+        // INICIO DE HORAINICIO
+        Text(
+            "Hora",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 25.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        HoraPickerField(hora)
+        // FINAL DE HORAINICIO
+
+        // INICIO DE SELECCIONAR ESTACION
+        EstacionMetroSelector(
+            estacionMetro = estacionMetro,
+            estaciones = estaciones
+        )
+        // FINAL DE SELECCIONAR ESTACION
 
         //BOTON PARA CREAR REPORTE
         Button(onClick = {
@@ -340,6 +413,71 @@ fun DescripcionField(
         supportingText = {
             Text("${descripcion.length} / $maxLength")
         }
+    )
+}
+
+fun EstacionMetroSelector(
+    estacionMetro: MutableState<String>,
+    estaciones: List<String>
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        OutlinedTextField(
+            value = estacionMetro.value,
+            onValueChange = {},
+            label = { Text("Estación del Metro") },
+            placeholder = { Text("Seleccione una estación") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true },
+            readOnly = true
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            estaciones.forEach { estacion ->
+                DropdownMenuItem(
+                    text = { Text(estacion) },
+                    onClick = {
+                        estacionMetro.value = estacion
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+fun HoraPickerField(hora: MutableState<String>) {
+
+    var openDialog by remember { mutableStateOf(false) }
+
+    // --- Si el usuario abre el time picker ---
+    if (openDialog) {
+        TimePickerDialog(
+            onCancel = { openDialog = false },
+            onConfirm = { timePickerState ->
+                val h = timePickerState.hour
+                val m = timePickerState.minute
+                hora.value = "%02d:%02d".format(h, m)
+                openDialog = false
+            }
+        )
+    }
+
+    // --- Lo que ve el usuario ---
+    OutlinedTextField(
+        value = hora.value,
+        onValueChange = {},
+        label = { Text("Hora") },
+        placeholder = { Text("Selecciona una hora") },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { openDialog = true },
+        readOnly = true
     )
 }
 
