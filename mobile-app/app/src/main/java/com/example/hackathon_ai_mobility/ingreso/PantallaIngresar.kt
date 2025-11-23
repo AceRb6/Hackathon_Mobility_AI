@@ -31,14 +31,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hackathon_ai_mobility.R
+import com.example.hackathon_ai_mobility.ui.theme.FieldActivado
+import com.example.hackathon_ai_mobility.ui.theme.FieldDesactivado
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun PantallaIngresar(
     auth: FirebaseAuth,
-    navegarPantallaInicial: () -> Unit = {},
-    navegarPantallaPrincipal: () -> Unit = {},
-    navegarPantallaPrincipalAdmin: () -> Unit = {}
+    navegarPantallaInicial: () -> Unit = {}
+    //navegarPantallaPrincipal: () -> Unit = {},
+    //navegarPantallaPrincipalAdmin: () -> Unit = {}
 ) {
     var correoIngresar by remember { mutableStateOf("") }
     var contraseñaIngresar by remember { mutableStateOf("") }
@@ -126,9 +128,9 @@ fun PantallaIngresar(
                         val esAdmin = correoLower.endsWith("@metro-cdmx.gob")
 
                         if (esAdmin) {
-                            navegarPantallaPrincipalAdmin()
+                            //navegarPantallaPrincipalAdmin()
                         } else {
-                            navegarPantallaPrincipal()
+                            //navegarPantallaPrincipal()
                         }
 
                     } else {
