@@ -87,10 +87,12 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
                             idDocumento = snapshot.id,
                             nombreDeJefeDeEstacionCreadorReporte = reporte.nombreDeJefeDeEstacionCreadorReporte,
                             fechaHoraCreacionReporte = reporte.fechaHoraCreacionReporte,
+                            tituloReporte = reporte.tituloReporte,
                             estacionQueTieneReporte = reporte.estacionQueTieneReporte,
-                            descripcionReporteBD = reporte.descripcionReporteBD,
+                            descripcionReporteJefeDeEstacion = reporte.descripcionReporteJefeDeEstacion,
                             tipoProblema = reporte.tipoProblema,
-                            horaProblema = reporte.horaProblema
+                            horaProblema = reporte.horaProblema,
+                            reporteCompletado = reporte.reporteCompletado
 
                         )
                     } else {
@@ -149,7 +151,12 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
 
     fun cargarDatosReportes(
         descripcionReporte: String,
-        estacionSeleccionada: String
+        estacionSeleccionada: String,
+        horaCuandoEsmpezoProblema: String,
+        descripcionReporte: String,
+        tipodelproblema: int,
+        reporteTecnico: String,
+        reporteStatus: int
     ){
 
         val usuarioActual = auth.currentUser
@@ -166,10 +173,11 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
             //nombreDeUsuarioCreadorReporte = "Random $random",
             nombreDeJefeDeEstacionCreadorReporte = usuarioActual?.email ?: "Usuario desconocido",
             estacionQueTieneReporte = estacionSeleccionada,
-            //descripcionReporteBD = "Descripcion Random numero $random"
-            descripcionReporteBD = descripcionReporte,
-
-
+            horaProblema = horaCuandoEsmpezoProblema,
+            descripcionReporteJefeDeEstacion = descripcionReporte,
+            tipoProblema = tipodelproblema,
+            reporteTecnicoRegulador = reporteTecnico,
+            reporteCompletado = reporteStatus
 
 
             )

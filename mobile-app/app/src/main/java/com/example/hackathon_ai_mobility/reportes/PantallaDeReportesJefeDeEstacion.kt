@@ -23,8 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.hackathon_ai_mobility.presentation.modelos.ModeloReportesBD
-import com.example.hackathon_ai_mobility..ui.theme.Black
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -33,10 +31,9 @@ import com.example.hackathon_ai_mobility.ui.theme.FieldDesactivado
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
-import com.example.hackathon_ai_mobility.presentation.modelos.EstacionBD
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.lifecycle.viewmodel.compose.viewModel
-
+import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
 
 
 @Composable
@@ -47,12 +44,12 @@ fun PantallaDeReportesJefeDeEstacion(
      navegarPantallaPrincipal: () -> Unit = {},
      navegarPantallaMisReportesUsuario: () -> Unit = {} */
     auth: FirebaseAuth,
-    viewmodel: ModeloDeVistaPantallaReportesUsuario = viewModel(),
+    viewmodel: ModeloDeVistaPantallaJefeDeEstacion = viewModel(),
     navegarPantallaPrincipal: () -> Unit = {},
     navegarPantallaMisReportesUsuario: () -> Unit = {}
 
 ){
-/*
+
     //AQUI EMPIEZA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
     val variableParaParaConsumirViewmodel: State<List<ModeloReportesBD>> = viewmodel.listaReportesBD.collectAsState()
 
@@ -63,7 +60,7 @@ fun PantallaDeReportesJefeDeEstacion(
     //--->val estacion  tengo que crear esta BD
 
     //AQUI TERMINA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
-*/
+
     ///////// Variables de la nueva pantalla de Jefe de estación //////////////////////////
 
     //Variable de el problema

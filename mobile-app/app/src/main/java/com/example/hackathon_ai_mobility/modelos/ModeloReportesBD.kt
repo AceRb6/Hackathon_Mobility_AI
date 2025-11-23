@@ -10,10 +10,12 @@ class ModeloReportesBD (
     val nombreDeJefeDeEstacionCreadorReporte: String? = null,
     @ServerTimestamp val fechaHoraCreacionReporte: Timestamp? = null,
 
+    val tituloReporte: String? = null,
     val estacionQueTieneReporte: String? = null,
-    val descripcionReporteBD: String? = null,
+    val descripcionReporteJefeDeEstacion: String? = null,
     val tipoProblema: Int? = null,
-    val horaProblema: String? = null
-
+    val horaProblema: String? = null,
+    val reporteTecnicoRegulador: String? = null,
+    val reporteCompletado: Int? = null
 
 )
