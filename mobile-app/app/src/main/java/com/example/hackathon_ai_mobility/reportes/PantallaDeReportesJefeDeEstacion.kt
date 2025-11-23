@@ -1,5 +1,5 @@
 package com.example.hackathon_ai_mobility.reportes
-/*
+
 import androidx.compose.foundation.layout.heightIn
 
 import androidx.compose.foundation.background
@@ -163,33 +163,33 @@ fun PantallaDeReportesJefeDeEstacion(
         //FINAL BOTON PARA IR A PANTALLA PRINCIPAL------------
 
 
-/*        //INICIO ESCOGER ESTACION
-        Text(
-            "Selecciona estacion",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            modifier = Modifier.padding(16.dp)
-        )
+        /*        //INICIO ESCOGER ESTACION
+                Text(
+                    "Selecciona estacion",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
 
-        BuscadorEstacion(
-            texto = textoEstacion,
-            onTextoChange = { nuevoTexto ->
-                textoEstacion = nuevoTexto
-                estacionSeleccionada = null // se limpia si están escribiendo otra cosa
-            },
-            estaciones = listaEstaciones,
-            onEstacionElegida = { estacion ->
-                // aquí validamos si está abierta
-                if (estacion.abierta == 1) {
-                    estacionSeleccionada = estacion
-                } else {
-                    estacionSeleccionada = null
-                    mostrarDialogoEstacionCerrada = true
-                }
-            }
-        )
-        //FINAL ESCOGER ESTACION */
+                BuscadorEstacion(
+                    texto = textoEstacion,
+                    onTextoChange = { nuevoTexto ->
+                        textoEstacion = nuevoTexto
+                        estacionSeleccionada = null // se limpia si están escribiendo otra cosa
+                    },
+                    estaciones = listaEstaciones,
+                    onEstacionElegida = { estacion ->
+                        // aquí validamos si está abierta
+                        if (estacion.abierta == 1) {
+                            estacionSeleccionada = estacion
+                        } else {
+                            estacionSeleccionada = null
+                            mostrarDialogoEstacionCerrada = true
+                        }
+                    }
+                )
+                //FINAL ESCOGER ESTACION */
 
 
         //INICIO CUADRO DE PROBLEMA
@@ -610,4 +610,4 @@ fun BuscadorEstacion(
             }
         }
     }
-}*/
+}
