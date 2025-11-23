@@ -82,12 +82,12 @@ class MainActivity : ComponentActivity() {
 
                             if (email != null && email.endsWith("@metro-cdmx.gob")) {
                                 // Auto-login administrador
-                                navHostController.navigate("navInicial") {
+                                navHostController.navigate("navReportesJefeEstacion") {
                                     popUpTo("navInicial") { inclusive = true }
                                 }
                             } else {
                                 // Auto-login usuario normal
-                                navHostController.navigate("navInicial") {
+                                navHostController.navigate("navReportesJefeEstacion") {
                                     popUpTo("navInicial") { inclusive = true }
                                 }
                             }

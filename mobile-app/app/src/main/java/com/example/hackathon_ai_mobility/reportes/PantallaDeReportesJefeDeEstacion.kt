@@ -1,5 +1,6 @@
 package com.example.hackathon_ai_mobility.reportes
 
+
 import androidx.compose.foundation.layout.heightIn
 
 import androidx.compose.foundation.background
@@ -30,25 +31,34 @@ import com.example.hackathon_ai_mobility.ui.theme.FieldActivado
 import com.example.hackathon_ai_mobility.ui.theme.FieldDesactivado
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hackathon_ai_mobility.modelos.EstacionBD
 import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.ButtonDefaults
+import android.app.TimePickerDialog
+import android.widget.TimePicker
+import androidx.compose.ui.platform.LocalContext
+import java.util.Calendar
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 
 @Composable
 fun PantallaDeReportesJefeDeEstacion(
 
-    /* auth: FirebaseAuth,
-     viewmodel: ModeloDeVistaPantallaReportesUsuario = ModeloDeVistaPantallaReportesUsuario(),
-     navegarPantallaPrincipal: () -> Unit = {},
-     navegarPantallaMisReportesUsuario: () -> Unit = {} */
+
     auth: FirebaseAuth,
     viewmodel: ModeloDeVistaPantallaJefeDeEstacion = viewModel(),
-    navegarPantallaPrincipal: () -> Unit = {},
-    navegarPantallaMisReportesUsuario: () -> Unit = {}
+    navegarPantallaInicial: () -> Unit = {}
+
 
 ){
 
@@ -104,11 +114,13 @@ fun PantallaDeReportesJefeDeEstacion(
 
 
     /////////////AQUI EMPIEZA EL MAQUETADO DEL BACKGROUND DE PANTALLADEREPORTESJEFEDEESTACION
+
     Column(
 
         Modifier
             .fillMaxSize()
             .background(Black)
+            .verticalScroll(rememberScrollState())
 
     ) {
 
@@ -234,6 +246,7 @@ fun PantallaDeReportesJefeDeEstacion(
         )*/
 
         // Inicio de tipo
+        /*
         Row {
             listOf(0, 1, 2).forEach { value ->
                 Button(
@@ -248,7 +261,7 @@ fun PantallaDeReportesJefeDeEstacion(
                 }
             }
         }
-
+        */
 
         //FINAL DE TIPO
 
@@ -266,6 +279,8 @@ fun PantallaDeReportesJefeDeEstacion(
 
         // INICIO DE SELECCIONAR ESTACION
 
+
+
         // FINAL DE SELECCIONAR ESTACION
 
         //BOTON PARA CREAR REPORTE
@@ -282,7 +297,11 @@ fun PantallaDeReportesJefeDeEstacion(
             // Crear el reporte con estación + descripción
             viewmodel.cargarDatosReportes(
                 descripcionReporte = descripcion.value,
-                estacionSeleccionada = estacionNombre
+                estacionSeleccionada = estacionNombre,
+                horaCuandoEsmpezoProblema = hora.value,
+                tipodelproblema = tipo.value,
+                reporteTecnico = "",   // aquí podrías luego meter un campo de texto
+                reporteStatus = 0      // 0 = pendiente, 1 = completado, por ejemplo
             )
 
             // Mostrar mensaje de agradecimiento
@@ -346,7 +365,7 @@ fun PantallaDeReportesJefeDeEstacion(
             confirmButton = {
                 TextButton(onClick = {
                     mostrarDialogoGracias = false
-                    navegarPantallaPrincipal()  // regreso a pantalla principal
+                    //navegarPantallaPrincipal()  // regreso a pantalla principal
                 }) {
                     Text("Continuar")
                 }
@@ -358,6 +377,43 @@ fun PantallaDeReportesJefeDeEstacion(
 
     //FIN DIALOGOS CREACION DE REPORTE CORRECTO
 
+
+}
+@Composable
+fun ProblemaField(
+    problema: String,
+    onProblemaChange: (String) -> Unit
+){
+    // var descripcion by remember { mutableStateOf("") }
+    val maxLength = 350
+
+
+
+    OutlinedTextField(
+        value = problema,
+        onValueChange = { textoReporte: String ->
+            if (textoReporte.length <= maxLength) {
+                onProblemaChange(textoReporte)
+            }
+        },
+        label = { Text("Problema") },
+        placeholder = { Text("Escribe que Problema hay...") },
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 300.dp, max = 300.dp),
+        maxLines = 10,
+        singleLine = false,
+        colors = TextFieldDefaults.colors(
+
+            unfocusedContainerColor = FieldDesactivado,
+            focusedContainerColor = FieldActivado
+
+
+        ),
+        supportingText = {
+            Text("${problema.length} / $maxLength")
+        }
+    )
 
 }
 
@@ -399,6 +455,7 @@ fun DescripcionField(
     )
 }
 
+
 @Composable
 fun EstacionMetroSelector(
     estacionMetro: MutableState<String>,
@@ -438,33 +495,35 @@ fun EstacionMetroSelector(
 @Composable
 fun HoraPickerField(hora: MutableState<String>) {
 
-    var openDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    // --- Si el usuario abre el time picker ---
-    if (openDialog) {
-        TimePickerDialog(
-            onCancel = { openDialog = false },
-            onConfirm = { timePickerState ->
-                val h = timePickerState.hour
-                val m = timePickerState.minute
-                hora.value = "%02d:%02d".format(h, m)
-                openDialog = false
-            }
-        )
-    }
-
-    // --- Lo que ve el usuario ---
     OutlinedTextField(
         value = hora.value,
-        onValueChange = {},
+        onValueChange = { },
         label = { Text("Hora") },
         placeholder = { Text("Selecciona una hora") },
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { openDialog = true },
+            .clickable {
+                // Hora actual como valor inicial
+                val calendar = Calendar.getInstance()
+                val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                val minute = calendar.get(Calendar.MINUTE)
+
+                TimePickerDialog(
+                    context,
+                    { _: TimePicker, selectedHour: Int, selectedMinute: Int ->
+                        hora.value = "%02d:%02d".format(selectedHour, selectedMinute)
+                    },
+                    hour,
+                    minute,
+                    true // true = formato 24h
+                ).show()
+            },
         readOnly = true
     )
 }
+
 
 /*
 @Composable
@@ -595,10 +654,5 @@ fun BuscadorEstacion(
             }
         }
     }
-}
-
-@Composable
-fun ProblemaField(){
-
 }
 
