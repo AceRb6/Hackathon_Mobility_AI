@@ -2,14 +2,16 @@
 
 ## Descripción
 
-[Una descripción más detallada sobre el proyecto, el problema que resuelve y sus objetivos.]
+Esta aplicación móvil permite gestionar incidencias dentro del Metro CDMX mediante un flujo entre Jefe de Estación y Regulador. Los reportes se almacenan y sincronizan en tiempo real usando Firebase Firestore.
 
 ## Características
 
-*   Característica 1
-*   Característica 2
-*   Característica 3
-
+* Jefe de estación crea el reporte.
+* El reporte se guarda en Firestore.
+* Regulador consulta los reportes desde la colección.
+* Regulador completa la información técnica.
+* Firestore actualiza el documento.
+  
 ## Para Empezar
 
 Sigue estas instrucciones para tener una copia del proyecto corriendo en tu máquina local para propósitos de desarrollo y pruebas.
@@ -19,33 +21,30 @@ Sigue estas instrucciones para tener una copia del proyecto corriendo en tu máq
 Qué cosas necesitas para instalar el software y cómo instalarlas.
 
 ```
-mvn --version
+Kotlin
+
+Android Studio
+
+Firebase Firestore
+
+MVVM (sugerido)
 ```
 
 ### Instalación
 
-Una serie de pasos que te dicen cómo tener un entorno de desarrollo corriendo.
+Clonar el repositorio.
 
-Di cómo sería el paso a paso
+Abrir en Android Studio.
 
-```
-Da un ejemplo
-```
+Configurar el archivo google-services.json.
 
-Y repite hasta que termines
+Sincronizar el proyecto.
 
-Finaliza con un ejemplo de cómo obtener datos del sistema o usarlos para una pequeña demo.
+## Ejecución
 
-## Uso
+Ejecutar en un emulador o dispositivo físico con Android API 35.
 
-Añade ejemplos de cómo se puede usar el proyecto. Incluye capturas de pantalla, bloques de código y demos si es posible.
 
-## Tecnologías Utilizadas
-
-*   [Framework de Backend] - El framework web usado
-*   [Framework de Frontend] - El framework de UI
-*   [Base de Datos] - La base de datos usada
-*   [Etc.]
 
 ## Contribuciones
 
@@ -63,4 +62,4 @@ Ver también la lista de [contribuidores](https://github.com/tu-proyecto/contrib
 
 ## Licencia
 
-Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo [LICENSE.md](LICENSE.md) para detalles.
+Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE.md](LICENSE.md) para detalles.
