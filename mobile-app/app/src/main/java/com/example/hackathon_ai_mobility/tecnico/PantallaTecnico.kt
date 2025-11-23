@@ -31,16 +31,15 @@ import android.util.Log
 fun PantallaTecnico(
     auth: FirebaseAuth,
     viewModel: ModeloDeVistaPantallaTecnico = viewModel(),
-    navegarPantallaInicial: () -> Unit = {}
+    navegarPantallaInicial: () -> Unit = {},
+    navegarAMapaRutaOSM: (String, String) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val listaReportes by viewModel.listaReportesSistema.collectAsState()
     val estacionTecnico by viewModel.tecnicoDependencia.collectAsState()
 
-    // Filtra por ESTADO 1 (En Proceso). El filtro de dependencia ya está en el ViewModel.
     val reportesAsignados = listaReportes.filter { it.reporteCompletado == 1 }
 
-    // NOTIFICACIÓN (Lógica simplificada)
     var inicializado by remember { mutableStateOf(false) }
     var ultimoTamano by remember { mutableStateOf(0) }
     LaunchedEffect(reportesAsignados.size) {
@@ -49,7 +48,6 @@ fun PantallaTecnico(
             inicializado = true
         } else {
             if (reportesAsignados.size > ultimoTamano) {
-                // Notificación de nuevo reporte
                 repetirAlertasNuevoReporte(context)
             }
             ultimoTamano = reportesAsignados.size
@@ -59,7 +57,6 @@ fun PantallaTecnico(
     Column(
         modifier = Modifier.fillMaxSize().background(Black).padding(16.dp)
     ) {
-        // Encabezado
         Text("Técnico - Tareas Asignadas", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Text("Dependencia: ${estacionTecnico ?: "Cargando..."}", color = Color.Yellow, modifier = Modifier.padding(bottom = 16.dp))
 
@@ -80,8 +77,9 @@ fun PantallaTecnico(
                     ItemReporteTecnico(
                         reporte = reporte,
                         viewModel = viewModel,
-                        estacionTecnico = estacionTecnico ?: "Origen", // Pasamos la estación
-                        destinoReporte = reporte.estacionQueTieneReporte ?: "Destino"
+                        estacionTecnico = estacionTecnico ?: "Origen",
+                        destinoReporte = reporte.estacionQueTieneReporte ?: "Destino",
+                        navegarAMapaRutaOSM = navegarAMapaRutaOSM
                     )
                 }
             }
@@ -94,21 +92,19 @@ fun ItemReporteTecnico(
     reporte: ModeloReportesBD,
     viewModel: ModeloDeVistaPantallaTecnico,
     estacionTecnico: String,
-    destinoReporte: String
+    destinoReporte: String,
+    navegarAMapaRutaOSM: (String, String) -> Unit
 ) {
     var mostrarConfirmacion by remember { mutableStateOf(false) }
     var marcando by remember { mutableStateOf(false) }
 
-    // ESTADO PARA LA RUTA SIMULADA
     val resultadoRuta = viewModel.getBestRouteTime(estacionTecnico, destinoReporte)
     val tiempoRuta = resultadoRuta.first
     val modoRuta = resultadoRuta.second
 
-    // Parseo del texto concatenado del Regulador
     val instruccion = reporte.reporteTecnicoRegulador?.substringBefore("| Equipo:")?.removePrefix("Instrucción:")?.trim() ?: "Sin instrucción"
     val equipo = reporte.reporteTecnicoRegulador?.substringAfter("| Equipo:", "")?.trim() ?: "Sin equipo"
 
-    // Obtener color de prioridad
     val colorPrioridad = when (reporte.tipoProblema) {
         3 -> Color.Red
         2 -> Color(0xFFffc107)
@@ -121,14 +117,12 @@ fun ItemReporteTecnico(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // Encabezado
             Text("Estación Destino: ${destinoReporte}", color = Color.Cyan, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Text("Problema: ${reporte.tituloReporte ?: "-"}", color = Color.White, fontWeight = FontWeight.Bold)
             Text("Prioridad: Nivel ${reporte.tipoProblema}", color = colorPrioridad)
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
 
-            // SECCIÓN RUTA SIMULADA
             Text("RUTA MÁS RÁPIDA (Simulada)", color = Color.Yellow, fontWeight = FontWeight.Bold)
             Text("Origen: $estacionTecnico", color = Color.LightGray)
             Row {
@@ -139,21 +133,17 @@ fun ItemReporteTecnico(
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
 
-            // Instrucción del Regulador
             Text("Instrucción Regulador:", color = Color.Green, fontWeight = FontWeight.SemiBold)
             Text(instruccion, color = Color.White)
             Text("Equipo Requerido: $equipo", color = Color.White)
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // --- BOTONES DE ACCIÓN ---
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
 
-                // Botón para Mapa y Ruta (Llamaría a Intent o Navegación)
                 Button(
                     onClick = {
-                        // Lógica real: Abrir Google Maps Intent con origen/destino
-                        Log.i("MAPS", "Navegando a $destinoReporte desde $estacionTecnico...")
+                        navegarAMapaRutaOSM(estacionTecnico, destinoReporte)
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03A9F4))
@@ -161,7 +151,6 @@ fun ItemReporteTecnico(
                     Text("Abrir Mapa 🗺️", fontSize = 12.sp)
                 }
 
-                // Botón: Se solucionó problema (Abre Diálogo)
                 Button(
                     onClick = { mostrarConfirmacion = true },
                     enabled = !marcando && !reporte.idDocumento.isNullOrBlank(),
@@ -174,7 +163,6 @@ fun ItemReporteTecnico(
         }
     }
 
-    // --- DIÁLOGO DE CONFIRMACIÓN ---
     if (mostrarConfirmacion) {
         AlertDialog(
             onDismissRequest = { mostrarConfirmacion = false },
@@ -208,25 +196,7 @@ fun ItemReporteTecnico(
         )
     }
 }
-/**
- * Función simulada para lanzar un intento de mapa o diálogo de ruta.
- * Nota: La lógica de la API de Maps debe ser implementada por el desarrollador.
- */
-fun mostrarRutaMaps(origen: String, destino: String) {
-    // Aquí podrías usar un Intent para abrir la aplicación de Google Maps
-    // o navegar a un Composable que muestre la información de la ruta más rápida.
-    Log.i("MAPS", "Consultando ruta: $origen -> $destino")
-    // Ejemplo de Intent (Necesitaría importaciones en el archivo)
-    // val gmmIntentUri = Uri.parse("google.navigation:q=$destino&mode=d")
-    // val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-    // mapIntent.setPackage("com.google.android.apps.maps")
-    // context.startActivity(mapIntent)
-}
 
-/**
- * Lanza una notificación al sistema cada 30 segundos durante 2 minutos
- * para avisar al técnico que tiene un nuevo reporte.
- */
 suspend fun repetirAlertasNuevoReporte(context: Context) {
     val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -250,11 +220,10 @@ suspend fun repetirAlertasNuevoReporte(context: Context) {
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setAutoCancel(true)
 
-    // 2 minutos / cada 30s ≈ 4 repeticiones
     repeat(4) { index ->
         notificationManager.notify(1001, builder.build())
         if (index < 3) {
-            delay(30_000L) // 30 segundos
+            delay(30_000L)
         }
     }
 }
