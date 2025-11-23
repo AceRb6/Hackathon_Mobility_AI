@@ -1,0 +1,469 @@
+/* ================================================
+   PALETA DE COLORES DEL METRO CDMX - PROFESIONAL
+   ================================================ */
+:root {
+    --metro-red: #E3001B;
+    --metro-red-hover: #C10017;
+    --metro-red-light: #FF1A35;
+    --metro-white: #FFFFFF;
+    --metro-black: #000000;
+    --metro-dark-gray: #2C2C2C;
+    --metro-medium-gray: #666666;
+    --metro-light-gray: #F8F9FA;
+    --metro-border-gray: #E0E0E0;
+    --metro-shadow: rgba(227, 0, 27, 0.1);
+    --metro-shadow-dark: rgba(0, 0, 0, 0.15);
+}
+
+/* ================================================
+   ESTILOS GENERALES
+   ================================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+    color: var(--metro-dark-gray);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ================================================
+   ENCABEZADO MEJORADO
+   ================================================ */
+.header {
+    background: linear-gradient(135deg, var(--metro-red) 0%, var(--metro-red-hover) 100%);
+    color: var(--metro-white);
+    padding: 32px 20px;
+    box-shadow: 0 4px 20px var(--metro-shadow-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ================================================
+   CONTENEDOR PRINCIPAL
+   ================================================ */
+.container {
+    max-width: 900px;
+    margin: -30px auto 40px;
+    padding: 0 20px;
+    position: relative;
+}
+
+/* ================================================
+   TARJETAS MEJORADAS
+   ================================================ */
+.card {
+    background: var(--metro-white);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px var(--metro-shadow-dark);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--metro-border-gray);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--metro-shadow-dark);
+}
+
+.card-title {
+    color: var(--metro-red);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: linear-gradient(180deg, var(--metro-red) 0%, var(--metro-red-light) 100%);
+    border-radius: 2px;
+}
+
+/* ================================================
+   SELECT DROPDOWN PROFESIONAL
+   ================================================ */
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.select-field {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--metro-border-gray);
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    background: var(--metro-white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height=' 8'%3E%3Cpath fill='%23666' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.select-field:hover {
+    border-color: var(--metro-medium-gray);
+}
+
+.select-field:focus {
+    outline: none;
+    border-color: var(--metro-red);
+    box-shadow: 0 0 0 4px rgba(227, 0, 27, 0.1);
+}
+
+/* ================================================
+   BOTONES PROFESIONALES
+   ================================================ */
+.btn-primary {
+    width: 100%;
+    padding: 18px 32px;
+    background: linear-gradient(135deg, var(--metro-red) 0%, var(--metro-red-hover) 100%);
+    color: var(--metro-white);
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px var(--metro-shadow);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--metro-shadow-dark);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    background: linear-gradient(135deg, #CCCCCC 0%, #AAAAAA 100%);
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* ================================================
+   CONTENEDOR DE REPORTES
+   ================================================ */
+.reports-container {
+    min-height: 450px;
+}
+
+.reportes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 550px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Estado Vacío */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--metro-medium-gray);
+}
+
+.empty-state p {
+    font-size: 16px;
+    font-style: italic;
+}
+
+/* ================================================
+   TARJETA DE REPORTE (Basada en ItemReporteAdmin)
+   ================================================ */
+.reporte-card {
+    background: var(--metro-white);
+    border: 1px solid var(--metro-border-gray);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.reporte-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border-color: var(--metro-red);
+}
+
+.reporte-header {
+    background: #F0F1F3;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--metro-border-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reporte-usuario {
+    font-weight: 600;
+    color: #2E2E2E;
+    font-size: 15px;
+}
+
+.reporte-fecha {
+    font-size: 13px;
+    color: var(--metro-medium-gray);
+}
+
+.reporte-body {
+    padding: 16px;
+}
+
+.reporte-descripcion {
+    color: #414141;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.reporte-estacion {
+    color: var(--metro-red);
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+/* ================================================
+   MODALES MEJORADOS
+   ================================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--metro-white);
+    padding: 32px;
+    border-radius: 20px;
+    max-width: 550px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease;
+    border-top: 4px solid var(--metro-red);
+    text-align: left;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-content h3 {
+    color: var(--metro-red);
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.modal-info {
+    background: var(--metro-light-gray);
+    padding: 16px;
+    border-radius: 12px;
+    margin: 16px 0;
+}
+
+.modal-info p {
+    margin: 8px 0;
+    color: var(--metro-dark-gray);
+    font-size: 15px;
+}
+
+.modal-info strong {
+    color: var(--metro-red);
+    font-weight: 600;
+}
+
+.modal-description {
+    margin: 20px 0;
+}
+
+.modal-description strong {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--metro-red);
+    font-weight: 600;
+}
+
+.modal-description p {
+    background: var(--metro-light-gray);
+    padding: 16px;
+    border-radius: 12px;
+    line-height: 1.6;
+    color: var(--metro-dark-gray);
+    font-size: 15px;
+}
+
+/* ================================================
+   ACCIONES DEL MODAL
+   ================================================ */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-modal {
+    flex: 1;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-action {
+    background: linear-gradient(135deg, var(--metro-red) 0%, var(--metro-red-hover) 100%);
+    color: var(--metro-white);
+    box-shadow: 0 4px 12px var(--metro-shadow);
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--metro-shadow-dark);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 2px solid var(--metro-border-gray);
+    color: var(--metro-dark-gray);
+}
+
+.btn-secondary:hover {
+    background: var(--metro-light-gray);
+    border-color: var(--metro-dark-gray);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+    color: var(--metro-white);
+}
+
+/* ================================================
+   SCROLLBAR PERSONALIZADA
+   ================================================ */
+.reportes-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.reportes-list::-webkit-scrollbar-track {
+    background: var(--metro-light-gray);
+    border-radius: 10px;
+}
+
+.reportes-list::-webkit-scrollbar-thumb {
+    background: var(--metro-red);
+    border-radius: 10px;
+}
+
+.reportes-list::-webkit-scrollbar-thumb:hover {
+    background: var(--metro-red-hover);
+}
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+        margin-top: -20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .card-title {
+        font-size: 18px;
+    }
+
+    .modal-content {
+        margin: 20px;
+        padding: 24px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+}
