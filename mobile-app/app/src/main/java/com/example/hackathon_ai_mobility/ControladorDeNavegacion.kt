@@ -9,6 +9,7 @@ import com.example.hackathon_ai_mobility.inicial.PantallaInicial
 import com.example.hackathon_ai_mobility.registro.PantallaRegistro
 import com.example.hackathon_ai_mobility.reportes.PantallaDeReportesJefeDeEstacion
 import com.example.hackathon_ai_mobility.regulador.PantallaDeReportesRegulador
+import com.example.hackathon_ai_mobility.tecnico.PantallaTecnico
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -75,6 +76,16 @@ fun ControladorDeNavegacion(navHostController: NavHostController, auth: Firebase
         composable("navTecnico"){
             // Placeholder
             androidx.compose.material3.Text("Bienvenido Técnico")
+        }
+
+        composable("navTecnico") {
+            PantallaTecnico(
+                auth = auth,
+                navegarPantallaInicial = {
+                    auth.signOut()
+                    navHostController.navigate("navInicial") { popUpTo(0) { inclusive = true } }
+                }
+            )
         }
     }
 }
