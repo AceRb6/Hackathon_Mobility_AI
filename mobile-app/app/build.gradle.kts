@@ -48,22 +48,13 @@ android {
 
 dependencies {
 
-    /*todas estas dependencias estan especificadas en libs.versions.toml*/
-    /*no se si el orden tenga que ser especificamente como lo puse, pero de momento lo dejo asi*/
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
-
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
-
-    /*esta libreria es para imagenes*/
     implementation(libs.coil)
-
     implementation(libs.android.navigation.compose)
-
-    /*esta es de lo de los PRUEBA MAPAS*/
     implementation(libs.androidx.material.icons.extended)
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -73,7 +64,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.storage)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -82,7 +72,16 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    //esto es para sacar lo de guardar rutas en local
     implementation ("androidx.datastore:datastore-preferences:1.1.1")
     implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // --- DEPENDENCIAS PARA MAPAS GRATUITOS (OPENSTREETMAP) ---
+
+    // 1. Librería para mostrar el mapa de OpenStreetMap
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+
+    // 2. Librería para hacer peticiones de red (para obtener rutas y coordenadas)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }
