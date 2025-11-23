@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,56 +25,80 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.launch
 
+// --- FUNCIONES AUXILIARES (Debe estar fuera de los @Composable) ---
+fun obtenerColorPorTipo(tipo: Int?): Color {
+    return when (tipo) {
+        1 -> Color(0xFF4CAF50)      // Verde - Leve
+        2 -> Color(0xFFFFC107)      // Amarillo - Medio
+        3 -> Color(0xFFF44336)      // Rojo - Crítico
+        else -> Color.Gray
+    }
+}
+fun obtenerColorPorEstado(estado: Int?): Color {
+    return when (estado) {
+        0 -> Color(0xFF2196F3) // Azul: Pendiente
+        1 -> Color(0xFFFFC107) // Amarillo: En Proceso / Asignado
+        2 -> Color(0xFF4CAF50) // Verde: Completado
+        else -> Color.Gray
+    }
+}
+// ------------------------------------------------------------------
+
 @Composable
 fun PantallaDeReportesRegulador(
     auth: FirebaseAuth,
     viewModel: ModeloDeVistaRegulador = viewModel(),
     navegarPantallaInicial: () -> Unit = {}
 ) {
-    // Consumo de datos del ViewModel
     val listaReportes by viewModel.listaReportesSistema.collectAsState()
 
-    // Estado para controlar qué vista mostrar (true = Pendientes, false = Historial)
     var mostrarPendientes by remember { mutableStateOf(true) }
 
-    // Filtros según la vista seleccionada
     val reportesFiltrados = if (mostrarPendientes) {
-        listaReportes.filter { it.reporteCompletado == 0 } // Pendientes
+        listaReportes.filter { (it.reporteCompletado ?: 0) == 0 }
     } else {
-        listaReportes.filter { it.reporteCompletado == 1 } // Historial (completados)
+        listaReportes.filter { (it.reporteCompletado ?: 0) == 1 || (it.reporteCompletado ?: 0) == 2 }
     }
 
-    // Estado para Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Black
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Encabezado
-            Text(
-                "Regulador - Reportes",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            Button(onClick = { navegarPantallaInicial() }, modifier = Modifier.padding(bottom = 16.dp)) {
-                Text("Volver")
+            // ... (Encabezado y Botones de Pestañas) ...
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Regulador 🚂",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Button(
+                    onClick = { navegarPantallaInicial() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text("Salir")
+                }
             }
 
-            // Botones para cambiar entre Pendientes y Historial
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botones de Pestañas
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
@@ -82,7 +109,7 @@ fun PantallaDeReportesRegulador(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Pendientes", fontWeight = FontWeight.Bold)
+                    Text("Pendientes")
                 }
 
                 Button(
@@ -97,42 +124,26 @@ fun PantallaDeReportesRegulador(
                 }
             }
 
-            // Mostrar mensaje cuando no hay reportes
+            // LISTA DE REPORTES
             if (reportesFiltrados.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            if (mostrarPendientes) "✓ No hay reportes pendientes" else "📋 No hay reportes en el historial",
-                            color = Color.Green,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            if (mostrarPendientes)
-                                "Todos los reportes han sido procesados"
-                            else
-                                "Aún no has completado ningún reporte",
-                            color = Color.LightGray,
-                            fontSize = 14.sp
-                        )
-                    }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hay reportes en esta sección", color = Color.Gray)
                 }
             } else {
-                // Lista de tarjetas
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
                     items(reportesFiltrados) { reporte ->
-                        if (mostrarPendientes) {
-                            // Vista editable para pendientes
-                            ItemReportePendiente(reporte, viewModel, snackbarHostState)
+                        val estadoActual = reporte.reporteCompletado ?: 0
+                        if (estadoActual == 0) {
+                            ItemReportePendiente(
+                                reporte = reporte,
+                                viewModel = viewModel,
+                                snackbarHostState = snackbarHostState,
+                                onEnviado = { }
+                            )
                         } else {
-                            // Vista de solo lectura para historial
                             ItemReporteHistorial(reporte)
                         }
                     }
@@ -142,163 +153,52 @@ fun PantallaDeReportesRegulador(
     }
 }
 
-// Función para obtener color según tipo de problema
-fun obtenerColorPorTipo(tipo: Int?): Color {
-    return when (tipo) {
-        1 -> Color(0xFFF44336)      // Rojo - Detener operaciones (CRÍTICO)
-        2 -> Color(0xFFFFC107)      // Amarillo - Afecta la operación (MEDIO)
-        3 -> Color(0xFF4CAF50)      // Verde - No afecta la operación (LEVE)
-        else -> Color.Gray          // Default
-    }
-}
-
+// --- ITEM: PENDIENTE (EDITABLE - ESTADO 0) ---
 @Composable
 fun ItemReportePendiente(
     reporte: ModeloReportesBD,
     viewModel: ModeloDeVistaRegulador,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onEnviado: () -> Unit // Mantengo el callback
 ) {
-    // Mapa de tipos de problema con descripciones actualizadas
-    val tiposProblema = mapOf(
-        1 to Pair("🚨", "Detener operaciones"),
-        2 to Pair("⚠️", "Afecta la operación"),
-        3 to Pair("✅", "No afecta la operación")
-    )
-
-    // Variables locales para el formulario de respuesta
+    val tiposProblema = mapOf(1 to Pair("✅", "Leve"), 2 to Pair("⚠️", "Medio"), 3 to Pair("🚨", "Crítico"))
     var reporteTecnico by remember { mutableStateOf("") }
     var equipoLlevar by remember { mutableStateOf("") }
-    var tipoSeleccionado by remember { mutableIntStateOf(reporte.tipoProblema ?: 1) }
+    var tipoSeleccionado by remember { mutableIntStateOf(0) }
     var enviando by remember { mutableStateOf(false) }
-
     val scope = rememberCoroutineScope()
 
-    // Formateo seguro de fecha
-    val fechaFormateada = remember(reporte.fechaHoraCreacionReporte) {
-        try {
-            val date = reporte.fechaHoraCreacionReporte?.toDate()
-            if (date != null) {
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
-            } else "Sin fecha"
-        } catch (e: Exception) {
-            "Error fecha"
-        }
-    }
-
-    // Color del borde según tipo de problema
-    val colorTipo = obtenerColorPorTipo(tipoSeleccionado)
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color.DarkGray),
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorTipo.copy(alpha = 0.1f))
-    ) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color.DarkGray), modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Indicador de tipo con color
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colorTipo.copy(alpha = 0.3f))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${tiposProblema[tipoSeleccionado]?.first} ${tiposProblema[tipoSeleccionado]?.second ?: "Desconocido"}",
-                    color = colorTipo,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = fechaFormateada,
-                    color = Color.LightGray,
-                    fontSize = 12.sp
-                )
+            // Datos de solo lectura
+            Text(reporte.estacionQueTieneReporte ?: "S/N", color = Color.Cyan, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            if (!reporte.tituloReporte.isNullOrBlank()) {
+                Text(reporte.tituloReporte!!, color = Color.White, fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // --- SECCIÓN 1: DATOS RECIBIDOS (SOLO LECTURA) ---
-            Text(
-                text = "Estación: ${reporte.estacionQueTieneReporte}",
-                color = Color.Cyan,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text("Problema: ${reporte.tituloReporte}", color = Color.White, fontWeight = FontWeight.Bold)
-            Text("Hora Inicio: ${reporte.horaProblema}", color = Color.White)
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Descripción:", color = Color.LightGray, fontSize = 14.sp)
-            Text(
-                text = reporte.descripcionReporteJefeDeEstacion ?: "Sin descripción",
-                color = Color.White,
-                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f)).padding(4.dp).fillMaxWidth()
-            )
+            // ... (otros campos de solo lectura) ...
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
 
-            // --- SECCIÓN 2: DATOS A LLENAR (REGULADOR) ---
-            Text("Respuesta del Regulador", color = Color.Green, fontWeight = FontWeight.Bold)
+            // FORMULARIO DE ASIGNACIÓN
+            Text("Asignación de Recursos", color = Color.Green, fontWeight = FontWeight.Bold)
 
-            // Input: Reporte Técnico
-            OutlinedTextField(
-                value = reporteTecnico,
-                onValueChange = { reporteTecnico = it },
-                label = { Text("Reporte Técnico") },
-                placeholder = { Text("Instrucciones o diagnóstico") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = FieldActivado,
-                    unfocusedContainerColor = FieldDesactivado,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                )
-            )
-
+            OutlinedTextField(value = reporteTecnico, onValueChange = { reporteTecnico = it }, label = { Text("Instrucción Técnica") }, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(value = equipoLlevar, onValueChange = { equipoLlevar = it }, label = { Text("Equipo Requerido") }, modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Input: Equipo a llevar
-            OutlinedTextField(
-                value = equipoLlevar,
-                onValueChange = { equipoLlevar = it },
-                label = { Text("Equipo a llevar") },
-                placeholder = { Text("Herramientas, refacciones...") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = FieldActivado,
-                    unfocusedContainerColor = FieldDesactivado,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                )
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Input: Selector de Tipo con colores
-            Text("Confirmar Nivel de Severidad:", color = Color.White, fontSize = 14.sp)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                tiposProblema.forEach { (tipo, emojiYDescripcion) ->
-                    val colorBoton = obtenerColorPorTipo(tipo)
+            // BOTONES DE PRIORIDAD
+            Text("Nivel de Prioridad (Obligatorio):", color = Color.White, fontSize = 14.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                tiposProblema.forEach { (tipo, info) ->
                     Button(
                         onClick = { tipoSeleccionado = tipo },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (tipoSeleccionado == tipo) colorBoton else Color.Gray,
-                            contentColor = Color.White
-                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (tipoSeleccionado == tipo) obtenerColorPorTipo(tipo) else Color.Gray),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(emojiYDescripcion.first, fontSize = 20.sp)
-                            Text("Nivel $tipo", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(info.first, fontSize = 18.sp)
+                            Text("$tipo", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -306,39 +206,31 @@ fun ItemReportePendiente(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón de envío - CORRECCIÓN: validación con trim()
+            // BOTÓN ENVIAR
+            val esValido = !enviando && reporteTecnico.trim().isNotBlank() && equipoLlevar.trim().isNotBlank() && tipoSeleccionado > 0
+
             Button(
                 onClick = {
                     enviando = true
-                    viewModel.completarReporteTecnico(
+                    viewModel.enviarReporteATecnico(
                         idDocumento = reporte.idDocumento ?: "",
                         descripcionTecnica = reporteTecnico,
                         equipoLlevar = equipoLlevar,
                         tipoProblemaConfirmado = tipoSeleccionado,
                         onSuccess = {
                             enviando = false
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = "✓ Petición enviada exitosamente",
-                                    duration = SnackbarDuration.Short
-                                )
-                            }
+                            scope.launch { snackbarHostState.showSnackbar("✓ Petición enviada") }
+                            // El listener de Firebase se encarga de mover el item de la lista
                         },
-                        onError = { errorMessage ->
+                        onError = { msg ->
                             enviando = false
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = "✗ Error: $errorMessage",
-                                    duration = SnackbarDuration.Long
-                                )
-                            }
+                            scope.launch { snackbarHostState.showSnackbar("Error: $msg") }
                         }
                     )
                 },
-                // CORRECCIÓN: agregado .trim() para evitar espacios en blanco
-                enabled = !enviando && reporteTecnico.trim().isNotBlank() && equipoLlevar.trim().isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+                enabled = esValido,
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = if (esValido) Color.Blue else Color.DarkGray)
             ) {
                 Text(if (enviando) "Enviando..." else "Enviar Petición")
             }
@@ -346,104 +238,57 @@ fun ItemReportePendiente(
     }
 }
 
+// --- ITEM: HISTORIAL (SOLO LECTURA - ESTADO 1 ó 2) ---
 @Composable
-fun ItemReporteHistorial(
-    reporte: ModeloReportesBD
-) {
-    val tiposProblema = mapOf(
-        1 to Pair("", "Operacion detenida"),
-        2 to Pair("️", "Afecta la operación"),
-        3 to Pair("", "No afecta la operación")
-    )
+fun ItemReporteHistorial(reporte: ModeloReportesBD) {
+    val estadoActual = reporte.reporteCompletado ?: 0
+    val colorEstado = obtenerColorPorEstado(estadoActual)
+    val colorPrioridad = obtenerColorPorTipo(reporte.tipoProblema)
 
-    // Formateo seguro de fecha
-    val fechaFormateada = remember(reporte.fechaHoraCreacionReporte) {
-        try {
-            val date = reporte.fechaHoraCreacionReporte?.toDate()
-            if (date != null) {
-                SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
-            } else "Sin fecha"
-        } catch (e: Exception) {
-            "Error fecha"
-        }
+    // --- PARSEO CORRECTO DEL STRING CONCATENADO ---
+    val textoCompleto = reporte.reporteTecnicoRegulador ?: ""
+    // Busca "Instrucción: " y corta antes de " | Equipo:"
+    val instruccion = textoCompleto.substringBefore("| Equipo:").removePrefix("Instrucción:").trim()
+    // Busca " | Equipo:" y toma el resto
+    val equipo = textoCompleto.substringAfter("| Equipo:", "").trim()
+
+    val fecha = remember(reporte.fechaHoraCreacionReporte) {
+        val d = reporte.fechaHoraCreacionReporte?.toDate()
+        if(d!=null) SimpleDateFormat("dd/MM HH:mm").format(d) else "-"
     }
 
-    val colorTipo = obtenerColorPorTipo(reporte.tipoProblema)
-
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.DarkGray),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Indicador de tipo con color
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colorTipo.copy(alpha = 0.3f))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            // Cabecera y Estado
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(reporte.estacionQueTieneReporte ?: "", color = Color.Cyan, fontWeight = FontWeight.Bold)
+                Surface(color = colorEstado, shape = MaterialTheme.shapes.small) {
                     Text(
-                        text = "${tiposProblema[reporte.tipoProblema]?.first ?: "❓"} ${tiposProblema[reporte.tipoProblema]?.second ?: "Desconocido"}",
-                        color = colorTipo,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "✓ COMPLETADO",
-                        color = Color.Green,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        text = if (estadoActual == 1) "EN PROCESO" else "COMPLETADO",
+                        color = Color.White, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), fontWeight = FontWeight.Bold
                     )
                 }
-                Text(
-                    text = fechaFormateada,
-                    color = Color.LightGray,
-                    fontSize = 12.sp
-                )
             }
+            Text(reporte.tituloReporte ?: "Sin Título", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("Reporte de ${reporte.nombreDeJefeDeEstacionCreadorReporte}", color = Color.LightGray, fontSize = 12.sp)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
 
-            // Información del reporte original
-            Text(
-                text = "Estación: ${reporte.estacionQueTieneReporte}",
-                color = Color.Cyan,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            // --- DETALLES TÉCNICOS (RESTABLECIDOS) ---
+            Text("Instrucción Regulador:", color = Color.Green, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(instruccion, color = Color.White, fontSize = 14.sp)
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
+            Text("Equipo Requerido:", color = Color.Green, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(equipo, color = Color.White, fontSize = 14.sp)
 
-            Text("Problema: ${reporte.tituloReporte}", color = Color.White, fontWeight = FontWeight.Bold)
-            Text("Hora Inicio: ${reporte.horaProblema}", color = Color.White)
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Descripción Original:", color = Color.LightGray, fontSize = 14.sp)
-            Text(
-                text = reporte.descripcionReporteJefeDeEstacion ?: "Sin descripción",
-                color = Color.White,
-                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f)).padding(4.dp).fillMaxWidth()
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray)
-
-            // Respuesta del regulador (solo lectura)
-            Text("Respuesta Enviada:", color = Color.Green, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = reporte.reporteTecnicoRegulador ?: "Sin respuesta registrada",
-                color = Color.White,
-                modifier = Modifier
-                    .background(Color(0xFF1E1E1E))
-                    .padding(12.dp)
-                    .fillMaxWidth()
-            )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Prioridad Nivel ${reporte.tipoProblema}", color = colorPrioridad, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

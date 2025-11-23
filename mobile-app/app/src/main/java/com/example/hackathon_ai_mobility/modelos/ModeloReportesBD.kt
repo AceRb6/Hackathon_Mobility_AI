@@ -3,10 +3,9 @@ package com.example.hackathon_ai_mobility.modelos
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ServerTimestamp
 
-class ModeloReportesBD (
-
-    //el formato tiene que ser el siguiente -> val nombreDeLaVariable: TipoDeVariable? = null
-    val idDocumento: String? = null,
+// CAMBIO: Agregar 'data' al inicio
+data class ModeloReportesBD (
+    val idDocumento: String? = null, // Aquí guardaremos el ID real de Firebase
     val nombreDeJefeDeEstacionCreadorReporte: String? = null,
     @ServerTimestamp val fechaHoraCreacionReporte: Timestamp? = null,
 
@@ -17,5 +16,4 @@ class ModeloReportesBD (
     val horaProblema: String? = null,
     val reporteTecnicoRegulador: String? = null,
     val reporteCompletado: Int? = null
-
 )

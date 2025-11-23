@@ -4,9 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import com.google.firebase.firestore.toObjects
+import com.google.firebase.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +16,6 @@ class ModeloDeVistaRegulador : ViewModel() {
 
     private val db = Firebase.firestore
 
-    // Flujo de datos para mostrar la lista de reportes en la pantalla del Regulador
     private val _listaReportesSistema = MutableStateFlow<List<ModeloReportesBD>>(emptyList())
     val listaReportesSistema: StateFlow<List<ModeloReportesBD>> = _listaReportesSistema.asStateFlow()
 
@@ -25,30 +23,30 @@ class ModeloDeVistaRegulador : ViewModel() {
         escucharReportesEnTiempoReal()
     }
 
-    /**
-     * Escucha en tiempo real la colección "reportesBD".
-     */
     private fun escucharReportesEnTiempoReal() {
-        // Escucha cambios en la colección "reportesBD"
+        // Escuchamos la colección 'reportesBD'
         db.collection("reportesBD")
             .orderBy("fechaHoraCreacionReporte", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.w("ReguladorVM", "Error escuchando reportes", e)
+                    Log.e("ReguladorVM", "Error al escuchar: ${e.message}")
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null) {
-                    val reportes = snapshot.toObjects<ModeloReportesBD>()
-                    _listaReportesSistema.value = reportes
+                    // Mapeo manual para inyectar el ID del documento
+                    val listaConIDs = snapshot.documents.mapNotNull { doc ->
+                        val reporte = doc.toObject(ModeloReportesBD::class.java)
+                        // Inyectamos doc.id, CRÍTICO para la función de actualización
+                        reporte?.copy(idDocumento = doc.id)
+                    }
+                    _listaReportesSistema.value = listaConIDs
                 }
             }
     }
 
-    /**
-     * Actualiza el reporte existente en "reportesBD".
-     */
-    fun completarReporteTecnico(
+    // --- FUNCIÓN REQUERIDA POR LA PANTALLA ---
+    fun enviarReporteATecnico(
         idDocumento: String,
         descripcionTecnica: String,
         equipoLlevar: String,
@@ -58,21 +56,19 @@ class ModeloDeVistaRegulador : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                if (idDocumento.isBlank() || descripcionTecnica.isBlank()) {
-                    onError("El ID del documento o la descripción técnica están vacíos.")
+                if (idDocumento.isBlank()) {
+                    onError("Error interno: ID de reporte no encontrado.")
                     return@launch
                 }
 
-                // Concatenación de datos para el campo de texto único en BD
-                val reporteFinalString = "Reporte: $descripcionTecnica | Equipo: $equipoLlevar"
+                val reporteFinalString = "Instrucción: $descripcionTecnica | Equipo: $equipoLlevar"
 
                 val actualizaciones = mapOf(
                     "reporteTecnicoRegulador" to reporteFinalString,
                     "tipoProblema" to tipoProblemaConfirmado,
-                    "reporteCompletado" to 1 // 1 = Completado/Cerrado
+                    "reporteCompletado" to 1
                 )
 
-                // Actualiza en la colección correcta "reportesBD"
                 db.collection("reportesBD")
                     .document(idDocumento)
                     .update(actualizaciones)
@@ -81,8 +77,8 @@ class ModeloDeVistaRegulador : ViewModel() {
                 onSuccess()
 
             } catch (e: Exception) {
-                Log.e("ReguladorVM", "Error actualizando reporte técnico", e)
-                onError(e.message ?: "Error desconocido al actualizar")
+                Log.e("ReguladorVM", "Error al actualizar", e)
+                onError(e.message ?: "Error desconocido")
             }
         }
     }
