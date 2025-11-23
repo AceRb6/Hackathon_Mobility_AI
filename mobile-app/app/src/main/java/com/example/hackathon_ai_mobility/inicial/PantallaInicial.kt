@@ -76,7 +76,7 @@ fun PantallaInicial(navegarPantallaIngresar: () -> Unit = {}, navegarPantallaReg
         )/*TEXTO (en trabajo a futuro hacer el texto de manera responsiva)*/
         Spacer(modifier = Modifier.weight(.5f))
         Text(
-            "Bienvenid@ \n" + "\n" + "Esta App se diseño para que " + "puedas generar rutas a través" + "del STC Metro, donde podras " + "informarte de cierre de " + "estaciones y opciones de " + "movilidad que puedas utilizar " + "en tu viaje.",
+            "Bienvenid@ \n" + "\n" + "Esta App se diseño para que " + "se pueda organizar de manera" + "mas fluida los reportes " + "de incidencias en las  " + "estaciones del metro de la " + "ciudad de México " ,
             color = Color.White,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,

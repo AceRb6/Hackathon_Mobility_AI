@@ -24,24 +24,33 @@ class ModeloDeVistaRegulador : ViewModel() {
     }
 
     private fun escucharReportesEnTiempoReal() {
-        // Escuchamos la colección 'reportesBD'
+        Log.d("ReguladorVM", "Iniciando listener de reportesBD…")
+
         db.collection("reportesBD")
             .orderBy("fechaHoraCreacionReporte", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.e("ReguladorVM", "Error al escuchar: ${e.message}")
+                    Log.e("ReguladorVM", "Error al escuchar: ${e.message}", e)
                     return@addSnapshotListener
                 }
 
-                if (snapshot != null) {
-                    // Mapeo manual para inyectar el ID del documento
-                    val listaConIDs = snapshot.documents.mapNotNull { doc ->
-                        val reporte = doc.toObject(ModeloReportesBD::class.java)
-                        // Inyectamos doc.id, CRÍTICO para la función de actualización
-                        reporte?.copy(idDocumento = doc.id)
-                    }
-                    _listaReportesSistema.value = listaConIDs
+                if (snapshot == null) {
+                    Log.e("ReguladorVM", "Snapshot de reportesBD es NULL")
+                    return@addSnapshotListener
                 }
+
+                Log.d("ReguladorVM", "Snapshot reportesBD size=${snapshot.size()}")
+
+                val listaConIDs = snapshot.documents.mapNotNull { doc ->
+                    val rawData = doc.data
+                    Log.d("ReguladorVM", "docId=${doc.id} -> $rawData")
+
+                    val reporte = doc.toObject(ModeloReportesBD::class.java)
+                    reporte?.copy(idDocumento = doc.id)
+                }
+
+                Log.d("ReguladorVM", "Lista mapeada para Regulador size=${listaConIDs.size}")
+                _listaReportesSistema.value = listaConIDs
             }
     }
 
@@ -56,8 +65,15 @@ class ModeloDeVistaRegulador : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
+                Log.d(
+                    "ReguladorVM",
+                    "enviarReporteATecnico() id=$idDocumento desc='$descripcionTecnica' equipo='$equipoLlevar' tipo=$tipoProblemaConfirmado"
+                )
+
                 if (idDocumento.isBlank()) {
-                    onError("Error interno: ID de reporte no encontrado.")
+                    val msg = "Error interno: ID de reporte no encontrado."
+                    Log.e("ReguladorVM", msg)
+                    onError(msg)
                     return@launch
                 }
 
@@ -69,11 +85,14 @@ class ModeloDeVistaRegulador : ViewModel() {
                     "reporteCompletado" to 1
                 )
 
+                Log.d("ReguladorVM", "Actualizando docId=$idDocumento con $actualizaciones")
+
                 db.collection("reportesBD")
                     .document(idDocumento)
                     .update(actualizaciones)
                     .await()
 
+                Log.d("ReguladorVM", "enviarReporteATecnico() OK para docId=$idDocumento")
                 onSuccess()
 
             } catch (e: Exception) {
@@ -82,4 +101,5 @@ class ModeloDeVistaRegulador : ViewModel() {
             }
         }
     }
+
 }

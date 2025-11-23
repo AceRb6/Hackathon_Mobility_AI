@@ -61,13 +61,16 @@ class ModeloDeVistaPantallaTecnico : ViewModel() {
     }
 
     private fun listenForAssignedReports(dependencia: String?) {
-        var query = db.collection("reportesBD")
+        /*var query = db.collection("reportesBD")
             .whereEqualTo("reporteCompletado", 1) // Solo reportes Asignados/En proceso (Estado 1)
+            .orderBy("fechaHoraCreacionReporte", Query.Direction.DESCENDING)*/
+        var query = db.collection("reportesBD")
+            .whereEqualTo("reporteCompletado", 1)
             .orderBy("fechaHoraCreacionReporte", Query.Direction.DESCENDING)
 
         // FILTRADO POR ESTACIÓN ASIGNADA
         if (dependencia != null) {
-            query = query.whereEqualTo("estacionQueTieneReporte", dependencia.capitalize()) // Asume que la estación está en mayúsculas
+            query = query.whereEqualTo("estacionQueTieneReporte", dependencia.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }) // Asume que la estación está en mayúsculas
         }
 
         query.addSnapshotListener { snapshot, e ->
