@@ -2,8 +2,10 @@ package com.example.hackathon_ai_mobility
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.hackathon_ai_mobility.ingreso.PantallaIngresar
 import com.example.hackathon_ai_mobility.inicial.PantallaInicial
 import com.example.hackathon_ai_mobility.registro.PantallaRegistro
@@ -11,6 +13,9 @@ import com.example.hackathon_ai_mobility.reportes.PantallaDeReportesJefeDeEstaci
 import com.example.hackathon_ai_mobility.regulador.PantallaDeReportesRegulador
 import com.example.hackathon_ai_mobility.tecnico.PantallaTecnico
 import com.google.firebase.auth.FirebaseAuth
+import android.net.Uri
+import com.example.hackathon_ai_mobility.prueba_mapa.usuario.ScreenDeMetroUsuario
+
 
 @Composable
 fun ControladorDeNavegacion(navHostController: NavHostController, auth: FirebaseAuth) {
@@ -73,19 +78,43 @@ fun ControladorDeNavegacion(navHostController: NavHostController, auth: Firebase
             )
         }
 
-        composable("navTecnico"){
-            // Placeholder
-            androidx.compose.material3.Text("Bienvenido Técnico")
-        }
-
         composable("navTecnico") {
             PantallaTecnico(
                 auth = auth,
                 navegarPantallaInicial = {
                     auth.signOut()
-                    navHostController.navigate("navInicial") { popUpTo(0) { inclusive = true } }
+                    navHostController.navigate("navInicial") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                navegarAMapaRutaOSM = { origen, destino ->
+                    val origenEncoded = Uri.encode(origen)
+                    val destinoEncoded = Uri.encode(destino)
+                    navHostController.navigate("navMapaMetro/$origenEncoded/$destinoEncoded")
                 }
             )
         }
+
+
+        composable(
+            route = "navMapaMetro/{origen}/{destino}",
+            arguments = listOf(
+                navArgument("origen") { type = NavType.StringType },
+                navArgument("destino") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val origen = backStackEntry.arguments?.getString("origen") ?: ""
+            val destino = backStackEntry.arguments?.getString("destino") ?: ""
+
+            // Aquí mostramos la pantalla del mapa
+            ScreenDeMetroUsuario(
+                origenInicial = origen,
+                destinoInicial = destino
+            )
+        }
+
+
+
+
     }
 }
