@@ -87,11 +87,29 @@ fun ControladorDeNavegacion(navHostController: NavHostController, auth: Firebase
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                navegarAMapaRutaOSM = { origen, destino ->
+                /*navegarAMapaRutaOSM = { origen, destino ->
                     val origenEncoded = Uri.encode(origen)
                     val destinoEncoded = Uri.encode(destino)
                     navHostController.navigate("navMapaMetro/$origenEncoded/$destinoEncoded")
-                }
+                }*/
+            )
+        }
+
+
+        composable(
+            route = "navMapaMetro/{origen}/{destino}",
+            arguments = listOf(
+                navArgument("origen") { type = NavType.StringType },
+                navArgument("destino") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val origen = backStackEntry.arguments?.getString("origen") ?: ""
+            val destino = backStackEntry.arguments?.getString("destino") ?: ""
+
+            // Aquí mostramos la pantalla del mapa
+            ScreenDeMetroUsuario(
+                origenInicial = origen,
+                destinoInicial = destino
             )
         }
 
