@@ -153,10 +153,10 @@ class ModeloDeVistaPantallaJefeDeEstacion: ViewModel(){
         descripcionReporte: String,
         estacionSeleccionada: String,
         horaCuandoEsmpezoProblema: String,
-        descripcionReporte: String,
-        tipodelproblema: int,
+        //descripcionReporte: String,
+        tipodelproblema: Int,
         reporteTecnico: String,
-        reporteStatus: int
+        reporteStatus: Int
     ){
 
         val usuarioActual = auth.currentUser

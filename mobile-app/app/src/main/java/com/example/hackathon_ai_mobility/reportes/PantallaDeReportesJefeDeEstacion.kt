@@ -32,7 +32,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hackathon_ai_mobility.modelos.EstacionBD
 import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
 
 
@@ -82,7 +84,7 @@ fun PantallaDeReportesJefeDeEstacion(
     val estacionMetro = remember { mutableStateOf("") }
 
     ///////////////////////////////////////////////////////Aqui acaban las variables///////////////////////////////
-/*
+
     //Esto es para Crear el reporte ya con la estacion seleccionada------------------
 
     // Estaciones desde Firestore
@@ -98,7 +100,7 @@ fun PantallaDeReportesJefeDeEstacion(
 
     //FIN Crear el reporte ya con la estacion seleccionada------------------
 
-*/
+
 
 
     /////////////AQUI EMPIEZA EL MAQUETADO DEL BACKGROUND DE PANTALLADEREPORTESJEFEDEESTACION
@@ -125,7 +127,7 @@ fun PantallaDeReportesJefeDeEstacion(
         //BOTON PARA IR A PANTALLA PRINCIPAL
         Button(onClick = {
 
-            navegarPantallaPrincipal()
+           // navegarPantallaPrincipal()
 
         }) {
 
@@ -134,20 +136,20 @@ fun PantallaDeReportesJefeDeEstacion(
         }
         //FINAL BOTON PARA IR A PANTALLA PRINCIPAL
 
-        //BOTON PARA IR A PANTALLA PRINCIPAL-----------
+        //BOTON PARA IR A Reportes Usuario-----------
         Button(onClick = {
 
-            navegarPantallaMisReportesUsuario()
+            //navegarPantallaMisReportesUsuario()
 
         }) {
 
             Text("Ir a Pantalla Mis Reportes")
 
         }
-        //FINAL BOTON PARA IR A PANTALLA PRINCIPAL------------
+        //FINAL BOTON PARA IR A Reportes UsuarioL------------
 
 
-        /*        //INICIO ESCOGER ESTACION
+        //INICIO ESCOGER ESTACION
                 Text(
                     "Selecciona estacion",
                     color = Color.White,
@@ -397,6 +399,7 @@ fun DescripcionField(
     )
 }
 
+@Composable
 fun EstacionMetroSelector(
     estacionMetro: MutableState<String>,
     estaciones: List<String>
@@ -432,6 +435,7 @@ fun EstacionMetroSelector(
     }
 }
 
+@Composable
 fun HoraPickerField(hora: MutableState<String>) {
 
     var openDialog by remember { mutableStateOf(false) }
@@ -522,7 +526,7 @@ fun BuscadorEstacion(
 }
 */
 @Composable
-/*fun BuscadorEstacion(
+fun BuscadorEstacion(
     texto: String,
     onTextoChange: (String) -> Unit,
     estaciones: List<EstacionBD>,
@@ -592,4 +596,9 @@ fun BuscadorEstacion(
         }
     }
 }
-*/
+
+@Composable
+fun ProblemaField(){
+
+}
+
