@@ -56,7 +56,7 @@ Por favor lee [CONTRIBUTING.md](CONTRIBUTING.md) para detalles sobre nuestro có
 *   **Jair Uziel Arroyo Parra** - *Logins* - [Comandante32](https://github.com/Comandante32)
 *   **Ariel Villalobos Lara** - *Trabajo Inicial* - [ARISCK](https://github.com/ARISCK)
 *   **Israel Daniel Arturo Cano Portugal** - *Trabajo Inicial* - [AceRb6](https://github.com/AceRb6)
-*   **Milton Carlos Perrusqui Islas** - *MVVM* - [Miltonio512](https://github.com/Miltonio512)
+*   **Milton Carlos Perrusquia Islas** - *MVVM* - [Miltonio512](https://github.com/Miltonio512)
 
 Ver también la lista de [contribuidores](https://github.com/tu-proyecto/contribuidores) que participaron en este proyecto.
 
