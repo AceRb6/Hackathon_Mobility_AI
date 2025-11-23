@@ -2,8 +2,10 @@ package com.example.hackathon_ai_mobility
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.hackathon_ai_mobility.ingreso.PantallaIngresar
 import com.example.hackathon_ai_mobility.inicial.PantallaInicial
 import com.example.hackathon_ai_mobility.registro.PantallaRegistro
@@ -78,13 +80,23 @@ fun ControladorDeNavegacion(navHostController: NavHostController, auth: Firebase
             androidx.compose.material3.Text("Bienvenido Técnico")
         }
 
-        composable("navTecnico") {
-            PantallaTecnico(
-                auth = auth,
-                navegarPantallaInicial = {
-                    auth.signOut()
-                    navHostController.navigate("navInicial") { popUpTo(0) { inclusive = true } }
-                }
+        composable("pantallaTecnico") {
+            PantallaTecnico(navController = navController)
+        }
+
+        composable(
+            route = "screenMetro?origen={origen}&destino={destino}",
+            arguments = listOf(
+                navArgument("origen") { type = NavType.StringType; nullable = true },
+                navArgument("destino") { type = NavType.StringType; nullable = true }
+            )
+        ) { backStackEntry ->
+            val origen = backStackEntry.arguments?.getString("origen")?.replace("%20", " ")
+            val destino = backStackEntry.arguments?.getString("destino")?.replace("%20", " ")
+
+            ScreenMetro(
+                origenInicial = origen,
+                destinoInicial = destino
             )
         }
     }

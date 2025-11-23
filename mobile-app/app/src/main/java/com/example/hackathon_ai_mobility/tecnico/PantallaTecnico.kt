@@ -1,229 +1,144 @@
 package com.example.hackathon_ai_mobility.tecnico
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
-import java.util.Locale
-import android.util.Log
 
 @Composable
 fun PantallaTecnico(
-    auth: FirebaseAuth,
-    viewModel: ModeloDeVistaPantallaTecnico = viewModel(),
-    navegarPantallaInicial: () -> Unit = {},
-    navegarAMapaRutaOSM: (String, String) -> Unit = { _, _ -> }
+    navController: NavHostController,
+    viewModel: ModeloDeVistaPantallaTecnico = viewModel()
 ) {
-    val context = LocalContext.current
-    val listaReportes by viewModel.listaReportesSistema.collectAsState()
-    val estacionTecnico by viewModel.tecnicoDependencia.collectAsState()
-
-    val reportesAsignados = listaReportes.filter { it.reporteCompletado == 1 }
-
-    var inicializado by remember { mutableStateOf(false) }
-    var ultimoTamano by remember { mutableStateOf(0) }
-    LaunchedEffect(reportesAsignados.size) {
-        if (!inicializado) {
-            ultimoTamano = reportesAsignados.size
-            inicializado = true
-        } else {
-            if (reportesAsignados.size > ultimoTamano) {
-                repetirAlertasNuevoReporte(context)
-            }
-            ultimoTamano = reportesAsignados.size
-        }
-    }
+    val reportes by viewModel.listaReportesSistema.collectAsState()
+    val dependencia by viewModel.tecnicoDependencia.collectAsState()
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Black).padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        Text("Técnico - Tareas Asignadas", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Text("Dependencia: ${estacionTecnico ?: "Cargando..."}", color = Color.Yellow, modifier = Modifier.padding(bottom = 16.dp))
 
-        Button(onClick = { navegarPantallaInicial() }, modifier = Modifier.padding(bottom = 8.dp)) {
-            Text("Cerrar Sesión")
-        }
+        Text(
+            text = "Panel del técnico",
+            style = MaterialTheme.typography.headlineSmall
+        )
 
-        if (reportesAsignados.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No hay tareas asignadas en este momento.", color = Color.Gray)
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(reportesAsignados) { reporte ->
-                    ItemReporteTecnico(
-                        reporte = reporte,
-                        viewModel = viewModel,
-                        estacionTecnico = estacionTecnico ?: "Origen",
-                        destinoReporte = reporte.estacionQueTieneReporte ?: "Destino",
-                        navegarAMapaRutaOSM = navegarAMapaRutaOSM
-                    )
-                }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Dependencia: ${dependencia ?: "Sin estación asignada"}",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(reportes) { reporte ->
+                ReporteCardTecnico(
+                    reporte = reporte,
+                    dependenciaTecnico = dependencia,
+                    onVerRuta = { origen, destino ->
+                        val origenParam = origen.replace(" ", "%20")
+                        val destinoParam = destino.replace(" ", "%20")
+                        navController.navigate("screenMetro?origen=$origenParam&destino=$destinoParam")
+                    },
+                    onMarcarSolucionado = { id ->
+                        viewModel.marcarReporteComoSolucionado(
+                            idDocumento = id,
+                            onSuccess = { viewModel.cargarReportesSistema() },
+                            onError = { /* podrías mostrar un snackbar, log, etc. */ }
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 }
 
 @Composable
-fun ItemReporteTecnico(
+fun ReporteCardTecnico(
     reporte: ModeloReportesBD,
-    viewModel: ModeloDeVistaPantallaTecnico,
-    estacionTecnico: String,
-    destinoReporte: String,
-    navegarAMapaRutaOSM: (String, String) -> Unit
+    dependenciaTecnico: String?,
+    onVerRuta: (String, String) -> Unit,
+    onMarcarSolucionado: (String) -> Unit
 ) {
-    var mostrarConfirmacion by remember { mutableStateOf(false) }
-    var marcando by remember { mutableStateOf(false) }
+    val estacionTecnico = dependenciaTecnico
+        ?.trim()
+        ?.replaceFirstChar { it.uppercaseChar() } // "zaragoza" -> "Zaragoza"
 
-    val resultadoRuta = viewModel.getBestRouteTime(estacionTecnico, destinoReporte)
-    val tiempoRuta = resultadoRuta.first
-    val modoRuta = resultadoRuta.second
-
-    val instruccion = reporte.reporteTecnicoRegulador?.substringBefore("| Equipo:")?.removePrefix("Instrucción:")?.trim() ?: "Sin instrucción"
-    val equipo = reporte.reporteTecnicoRegulador?.substringAfter("| Equipo:", "")?.trim() ?: "Sin equipo"
-
-    val colorPrioridad = when (reporte.tipoProblema) {
-        3 -> Color.Red
-        2 -> Color(0xFFffc107)
-        else -> Color(0xFF4CAF50)
-    }
+    val estacionIncidente = reporte.estacionQueTieneReporte?.trim()
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.DarkGray),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = reporte.tituloReporte ?: "(Sin título)",
+                style = MaterialTheme.typography.titleMedium
+            )
 
-            Text("Estación Destino: ${destinoReporte}", color = Color.Cyan, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text("Problema: ${reporte.tituloReporte ?: "-"}", color = Color.White, fontWeight = FontWeight.Bold)
-            Text("Prioridad: Nivel ${reporte.tipoProblema}", color = colorPrioridad)
+            Spacer(modifier = Modifier.height(4.dp))
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
+            Text(
+                text = "Estación con incidente: ${reporte.estacionQueTieneReporte ?: "—"}",
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-            Text("RUTA MÁS RÁPIDA (Simulada)", color = Color.Yellow, fontWeight = FontWeight.Bold)
-            Text("Origen: $estacionTecnico", color = Color.LightGray)
-            Row {
-                Text("Tiempo Estimado: ", color = Color.White)
-                Text("${tiempoRuta} min", color = Color.Red, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.width(12.dp))
-                Text("(${modoRuta})", color = Color.LightGray)
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Descripción: ${reporte.descripcionReporteJefeDeEstacion ?: "—"}",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                if (!estacionTecnico.isNullOrBlank() && !estacionIncidente.isNullOrBlank()) {
+                    Button(onClick = {
+                        onVerRuta(estacionTecnico, estacionIncidente)
+                    }) {
+                        Text("Ver ruta en mapa")
+                    }
+                } else {
+                    Text(
+                        text = "Sin estación asignada al técnico o al reporte",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                val idDoc = reporte.idDocumento
+                if (!idDoc.isNullOrBlank()) {
+                    TextButton(onClick = { onMarcarSolucionado(idDoc) }) {
+                        Text("Marcar solucionado")
+                    }
+                }
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.Gray)
-
-            Text("Instrucción Regulador:", color = Color.Green, fontWeight = FontWeight.SemiBold)
-            Text(instruccion, color = Color.White)
-            Text("Equipo Requerido: $equipo", color = Color.White)
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-
-                Button(
-                    onClick = {
-                        navegarAMapaRutaOSM(estacionTecnico, destinoReporte)
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03A9F4))
-                ) {
-                    Text("Abrir Mapa 🗺️", fontSize = 12.sp)
-                }
-
-                Button(
-                    onClick = { mostrarConfirmacion = true },
-                    enabled = !marcando && !reporte.idDocumento.isNullOrBlank(),
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ) {
-                    Text("Solucionado", fontSize = 12.sp)
-                }
-            }
-        }
-    }
-
-    if (mostrarConfirmacion) {
-        AlertDialog(
-            onDismissRequest = { mostrarConfirmacion = false },
-            title = { Text("Finalizar Tarea") },
-            text = { Text("¿Confirma que el problema en ${reporte.estacionQueTieneReporte} ha sido completamente resuelto?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val id = reporte.idDocumento ?: ""
-                        if (id.isNotBlank()) {
-                            marcando = true
-                            viewModel.marcarReporteComoSolucionado(
-                                idDocumento = id,
-                                onSuccess = {
-                                    marcando = false
-                                    mostrarConfirmacion = false
-                                },
-                                onError = {
-                                    marcando = false
-                                    mostrarConfirmacion = false
-                                }
-                            )
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ) {
-                    Text("Confirmar")
-                }
-            },
-            dismissButton = { TextButton(onClick = { mostrarConfirmacion = false }) { Text("Cancelar") } }
-        )
-    }
-}
-
-suspend fun repetirAlertasNuevoReporte(context: Context) {
-    val notificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-    val channelId = "canal_alertas_tecnico"
-    val channelName = "Alertas de reportes para técnico"
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val channel = NotificationChannel(
-            channelId,
-            channelName,
-            NotificationManager.IMPORTANCE_HIGH
-        )
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    val builder = NotificationCompat.Builder(context, channelId)
-        .setSmallIcon(android.R.drawable.ic_dialog_alert)
-        .setContentTitle("🚨 Nuevo reporte asignado")
-        .setContentText("Tienes un nuevo reporte técnico por atender.")
-        .setPriority(NotificationCompat.PRIORITY_HIGH)
-        .setAutoCancel(true)
-
-    repeat(4) { index ->
-        notificationManager.notify(1001, builder.build())
-        if (index < 3) {
-            delay(30_000L)
         }
     }
 }
