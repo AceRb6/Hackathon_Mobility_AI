@@ -1,107 +1,246 @@
 package com.example.hackathon_ai_mobility.dijkstra
 
+/**
+ * Costo lexicográfico: primero menos transbordos, luego menor distancia.
+ */
+data class CostoLexicografico(val transbordos: Int, val distancia: Int) : Comparable<CostoLexicografico> {
+    override fun compareTo(other: CostoLexicografico): Int {
+        if (transbordos != other.transbordos) return transbordos.compareTo(other.transbordos)
+        return distancia.compareTo(other.distancia)
+    }
+}
 
-import android.content.Context
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.WriteBatch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import java.util.Locale
+/** Conexión dirigida del grafo (arista). */
+private data class Conexion(
+    val nodoDestino: Int,
+    val distancia: Int,          // metros
+    val esTransbordo: Boolean    // true si es un enlace de transbordo (peso en metros = 0)
+)
 
-class MetroAdminViewModel(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
-) : ViewModel() {
+/** Grafo dirigido representado como Lista de Adyacencia. */
+private class Grafo {
+    val listaDeAdyacencia = mutableListOf<MutableList<Conexion>>()
 
-    fun importarTramosDesdeAssets(context: Context, nombreAsset: String = "tramos_metro.txt") {
-        viewModelScope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    val texto = context.assets.open(nombreAsset).bufferedReader().use { it.readText() }
-                    val lineas = texto.lineSequence()
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() && !it.startsWith("#") }
-                        .toList()
+    fun agregarNodo(): Int {
+        listaDeAdyacencia.add(mutableListOf())
+        return listaDeAdyacencia.lastIndex
+    }
 
-                    // Primera línea es encabezado -> saltamos si detectamos "Línea|..."
-                    val contenido = if (lineas.firstOrNull()?.contains("|") == true &&
-                        lineas.first().lowercase(Locale.ROOT).contains("línea")
-                    ) lineas.drop(1) else lineas
+    fun agregarConexion(origen: Int, destino: Int, distancia: Int, esTransbordo: Boolean) {
+        listaDeAdyacencia[origen].add(Conexion(destino, distancia, esTransbordo))
+    }
 
-                    val batch: WriteBatch = db.batch()
-                    val estacionesPorNombre = mutableMapOf<String, MutableSet<String>>() // para poblar 'estaciones'
+    val cantidadDeNodos: Int get() = listaDeAdyacencia.size
+}
 
-                    contenido.forEach { fila ->
-                        val partes = fila.split("|")
-                        if (partes.size < 4) return@forEach
+/**
+ * Representa cada nodo como (estación, línea).
+ * - Conexiones con peso = metros entre estaciones en la misma línea (esTransbordo=false)
+ * - Conexiones de transbordo con peso 0 (esTransbordo=true), para contar transbordos sin sumar distancia
+ */
+class GrafoMetroCompleto private constructor(
+    private val grafo: Grafo,
+    private val nodoAEstacion: List<String>,
+    private val nodoALinea: List<String>,
+    private val estacionLineaANodo: Map<Pair<String, String>, Int>,
+    private val estacionALineas: Map<String, MutableList<String>>
+) {
 
-                        val linea = partes[0].trim()
-                        val inter = partes[1].trim() // "A - B"
-                        val metros = partes[2].trim().toIntOrNull() ?: 0
-                        val estado = partes[3].trim().toIntOrNull() ?: 1
+    data class Resultado(val costo: CostoLexicografico, val nodosEnRuta: List<Int>) {
+        val totalTransbordos get() = costo.transbordos
+        val totalMetros get() = costo.distancia
+    }
 
-                        val ests = inter.split("-")
-                        if (ests.size != 2) return@forEach
-                        val origen = ests[0].trim()
-                        val destino = ests[1].trim()
+    fun obtenerNodoDe(estacion: String, linea: String): Int? =
+        estacionLineaANodo[normalizar(estacion) to linea.uppercase()]
 
-                        // DocID estable (útil para idempotencia)
-                        /*val docId = "${linea}_${origen}_${destino}"
-                            .replace(" ", "_")
-                            .replace("/", "_")
+    fun nombreEstacionDe(nodo: Int) = nodoAEstacion[nodo]
+    fun nombreLineaDe(nodo: Int) = nodoALinea[nodo]
 
-                        val ref = db.collection("tramos").document(docId)*/
-                        val docId = sanitizeId("${linea}_${origen}_${destino}")
-                        val ref = db.collection("tramosBD").document(docId)
+    /**
+     * Dijkstra que minimiza (transbordos, distancia).
+     */
+    fun rutaMasCorta(origen: Int, destino: Int): Resultado? {
+        val INF = CostoLexicografico(Int.MAX_VALUE / 4, Int.MAX_VALUE / 4)
+        val costos = Array(grafo.cantidadDeNodos) { INF }
+        val predecesor = IntArray(grafo.cantidadDeNodos) { -1 }
+        costos[origen] = CostoLexicografico(0, 0)
 
-                        val data = mapOf(
-                            "linea" to linea,
-                            "origen" to origen,
-                            "destino" to destino,
-                            "metros" to metros,
-                            "estado" to estado
-                        )
-                        batch.set(ref, data)
+        val colaPrioridad = java.util.PriorityQueue(
+            compareBy<Pair<Int, CostoLexicografico>> { it.second.transbordos }
+                .thenBy { it.second.distancia }
+        )
+        colaPrioridad.add(origen to costos[origen])
 
-                        // Para la colección estaciones
-                        estacionesPorNombre.getOrPut(origen.lowercase()) { mutableSetOf() }.add(linea)
-                        estacionesPorNombre.getOrPut(destino.lowercase()) { mutableSetOf() }.add(linea)
-                    }
+        while (colaPrioridad.isNotEmpty()) {
+            val (nodoActual, costoActual) = colaPrioridad.poll()
+            if (costoActual != costos[nodoActual]) continue
+            if (nodoActual == destino) break
 
-                    // Opcional: materializamos 'estaciones'
-                    estacionesPorNombre.forEach { (clave, setLineas) ->
-                        val nombre = clave.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-                        /*val docId = nombre.replace(" ", "_")
-                        val ref = db.collection("estaciones").document(docId)*/
-                        val docId = sanitizeId(nombre)
-                        val ref = db.collection("estacionesBD").document(docId)
-                        val data = mapOf(
-                            "nombre" to nombre,
-                            "lineas" to setLineas.sorted(),
-                            // Heurística: consideramos abierta si aparece en algún tramo estado=1.
-                            // (Podrías subir estados por estación si los tienes explícitos)
-                            "abierta" to 1
-                        )
-                        batch.set(ref, data)
-                    }
-
-                    batch.commit().await()
+            for (conexion in grafo.listaDeAdyacencia[nodoActual]) {
+                val incrementoTransbordos = if (conexion.esTransbordo) 1 else 0
+                val costoTentativo = CostoLexicografico(
+                    costoActual.transbordos + incrementoTransbordos,
+                    costoActual.distancia + conexion.distancia
+                )
+                if (costoTentativo < costos[conexion.nodoDestino]) {
+                    costos[conexion.nodoDestino] = costoTentativo
+                    predecesor[conexion.nodoDestino] = nodoActual
+                    colaPrioridad.add(conexion.nodoDestino to costoTentativo)
                 }
-            }.onSuccess { Log.i("Metro", "Migración de tramos/estaciones completada") }
-                .onFailure { Log.e("Metro", "Error migrando: ${it.message}", it) }
+            }
+        }
+
+        if (costos[destino] == INF) return null
+
+        // reconstrucción del camino
+        val ruta = mutableListOf<Int>()
+        var actual = destino
+        while (actual != -1) {
+            ruta.add(actual)
+            actual = predecesor[actual]
+        }
+        ruta.reverse()
+        return Resultado(costos[destino], ruta)
+    }
+
+    /**
+     * Devuelve la ruta formateada como: "Estación (Línea)", colapsando secuencias en la misma línea
+     * y marcando transbordos.
+     */
+    fun rutaFormateada(nodos: List<Int>): List<String> {
+        if (nodos.isEmpty()) return emptyList()
+        val salida = mutableListOf<String>()
+        var lineaAnterior = nombreLineaDe(nodos.first())
+        salida.add("${nombreEstacionDe(nodos.first())} ($lineaAnterior)")
+        for (i in 1 until nodos.size) {
+            val linea = nombreLineaDe(nodos[i])
+            if (linea != lineaAnterior) {
+                salida.add("Transbordo en ${nombreEstacionDe(nodos[i - 1])} → $linea")
+            }
+            salida.add("${nombreEstacionDe(nodos[i])} ($linea)")
+            lineaAnterior = linea
+        }
+        // eliminar duplicados consecutivos (cuando la estación se repite al crear transbordo)
+        return salida.fold(mutableListOf()) { acc, s ->
+            if (acc.isEmpty() || acc.last() != s) acc.add(s)
+            acc
         }
     }
 
-    private fun sanitizeId(raw: String): String =
-        raw.replace(" ", "_")
-            .replace("/", "_")
-            .replace(".", "_")
-            .replace("#", "_")
-            .replace("[", "_")
-            .replace("]", "_")
+    companion object {
+        /**
+         * Construye el grafo del Metro a partir del contenido de un archivo de texto.
+         * Formato esperado por línea: "Línea|Interestación|Longitud|Estado"
+         *  - Interestación: "A - B"
+         *  - Longitud: metros (entero)
+         */
+        fun desdeTexto(texto: String): GrafoMetroCompleto {
+            val grafo = Grafo()
+            val nodoAEstacion = mutableListOf<String>()
+            val nodoALinea = mutableListOf<String>()
+            val estacionLineaANodo = mutableMapOf<Pair<String, String>, Int>()
+            val estacionALineas = mutableMapOf<String, MutableList<String>>()
 
+            // Crea (si no existe) y devuelve el id de nodo para (estación, línea)
+            fun obtenerONuevoNodo(estacion: String, linea: String): Int {
+                val clave = normalizar(estacion) to linea.uppercase()
+                return estacionLineaANodo.getOrPut(clave) {
+                    val id = grafo.agregarNodo()
+                    nodoAEstacion.add(estacion.trim())
+                    nodoALinea.add(linea.uppercase())
+                    estacionALineas.getOrPut(normalizar(estacion)) { mutableListOf() }
+                        .apply { if (!contains(linea.uppercase())) add(linea.uppercase()) }
+                    id
+                }
+            }
+
+            val segmentosMismaLinea = mutableListOf<Triple<Int, Int, Int>>() // (u, v, metros)
+
+            texto.lineSequence()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") }
+                .forEach { linea ->
+                    val partes = linea.split("|")
+                    if (partes.size < 3) return@forEach
+                    val nombreLinea = partes[0].trim()
+                    val interesctacion = partes[1].trim() // "A - B"
+                    val metros = partes[2].trim().toIntOrNull() ?: 0
+
+                    val estaciones = interesctacion.split("-")
+                    if (estaciones.size != 2) return@forEach
+                    val estacionA = estaciones[0].trim()
+                    val estacionB = estaciones[1].trim()
+
+                    val nodoA = obtenerONuevoNodo(estacionA, nombreLinea)
+                    val nodoB = obtenerONuevoNodo(estacionB, nombreLinea)
+
+                    // Tramo ida y vuelta
+                    segmentosMismaLinea += Triple(nodoA, nodoB, metros)
+                    segmentosMismaLinea += Triple(nodoB, nodoA, metros)
+                }
+
+            // Conexiones dentro de la misma línea (peso = metros, no cuentan transbordo)
+            for ((u, v, w) in segmentosMismaLinea) {
+                grafo.agregarConexion(u, v, w, esTransbordo = false)
+            }
+
+            // Conexiones de transbordo entre TODAS las líneas que comparten estación
+            estacionALineas.forEach { (estacionClave, lineas) ->
+                if (lineas.size > 1) {
+                    for (i in lineas.indices) {
+                        for (j in i + 1 until lineas.size) {
+                            val li = lineas[i]
+                            val lj = lineas[j]
+                            val a = estacionLineaANodo[estacionClave to li]
+                            val b = estacionLineaANodo[estacionClave to lj]
+                            if (a != null && b != null) {
+                                grafo.agregarConexion(a, b, 0, esTransbordo = true)
+                                grafo.agregarConexion(b, a, 0, esTransbordo = true)
+                            }
+                        }
+                    }
+                }
+            }
+
+            return GrafoMetroCompleto(grafo, nodoAEstacion, nodoALinea, estacionLineaANodo, estacionALineas)
+        }
+
+        // Alias para mantener compatibilidad con posibles llamadas existentes.
+        fun fromText(text: String): GrafoMetroCompleto = desdeTexto(text)
+
+        private fun normalizar(s: String) = s.trim().lowercase()
+    }
+}
+
+/**
+ * Calcula la mejor ruta (mínimos transbordos y luego menor distancia) entre dos estaciones.
+ * Devuelve el resultado y la ruta formateada.
+ */
+fun computeBestRoute(metro: GrafoMetroCompleto, origin: String, destination: String): Pair<GrafoMetroCompleto.Resultado, List<String>>? {
+    val lineasSistema = sequenceOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "12")
+
+    val nodosOrigen = lineasSistema.mapNotNull { linea ->
+        metro.obtenerNodoDe(origin, linea)?.let { it to linea }
+    }.toList()
+    val nodosDestino = lineasSistema.mapNotNull { linea ->
+        metro.obtenerNodoDe(destination, linea)?.let { it to linea }
+    }.toList()
+
+    if (nodosOrigen.isEmpty() || nodosDestino.isEmpty()) return null
+
+    var mejor: GrafoMetroCompleto.Resultado? = null
+    var rutaBonita: List<String> = emptyList()
+
+    for ((origenNodo, _) in nodosOrigen) {
+        for ((destinoNodo, _) in nodosDestino) {
+            val r = metro.rutaMasCorta(origenNodo, destinoNodo) ?: continue
+            if (mejor == null || r.costo < mejor!!.costo) {
+                mejor = r
+                rutaBonita = metro.rutaFormateada(r.nodosEnRuta)
+            }
+        }
+    }
+
+    return mejor?.let { it to rutaBonita }
 }

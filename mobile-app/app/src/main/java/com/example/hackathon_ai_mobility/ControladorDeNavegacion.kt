@@ -80,24 +80,6 @@ fun ControladorDeNavegacion(navHostController: NavHostController, auth: Firebase
             androidx.compose.material3.Text("Bienvenido Técnico")
         }
 
-        composable("pantallaTecnico") {
-            PantallaTecnico(navController = navController)
-        }
 
-        composable(
-            route = "screenMetro?origen={origen}&destino={destino}",
-            arguments = listOf(
-                navArgument("origen") { type = NavType.StringType; nullable = true },
-                navArgument("destino") { type = NavType.StringType; nullable = true }
-            )
-        ) { backStackEntry ->
-            val origen = backStackEntry.arguments?.getString("origen")?.replace("%20", " ")
-            val destino = backStackEntry.arguments?.getString("destino")?.replace("%20", " ")
-
-            ScreenMetro(
-                origenInicial = origen,
-                destinoInicial = destino
-            )
-        }
     }
 }

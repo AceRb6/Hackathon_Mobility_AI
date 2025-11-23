@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
-import com.example.hackathon_ai_mobility.modelos.ModeloUsuarioBD
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,94 +15,98 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlin.random.Random
+import com.example.hackathon_ai_mobility.modelos.ModeloUsuarioBD // Asumimos esta clase existe
 
 class ModeloDeVistaPantallaTecnico : ViewModel() {
 
     private val db: FirebaseFirestore = Firebase.firestore
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    // Estación (dependencia) asignada al técnico logueado (ej. "zaragoza")
+    // Almacena la estación asignada del técnico logueado (Ej: "zaragoza")
     private val _tecnicoDependencia = MutableStateFlow<String?>(null)
     val tecnicoDependencia: StateFlow<String?> = _tecnicoDependencia.asStateFlow()
 
-    // Lista de reportes del sistema
+    // Lista de reportes filtrada para la estación del técnico
     private val _listaReportesSistema = MutableStateFlow<List<ModeloReportesBD>>(emptyList())
     val listaReportesSistema: StateFlow<List<ModeloReportesBD>> = _listaReportesSistema.asStateFlow()
 
     init {
-        cargarDependenciaTecnico()
-        cargarReportesSistema()
+        fetchTechnicianDataAndListenForReports()
     }
 
     /**
-     * Obtiene la dependencia del técnico (campo "dependencia" de usuariosBD/uid)
+     * 1. Obtiene el UID del usuario logueado.
+     * 2. Obtiene el campo 'dependencia' de 'usuariosBD'.
+     * 3. Inicia el listener de reportes filtrado por esa dependencia y Estado 1.
      */
-    private fun cargarDependenciaTecnico() {
+    private fun fetchTechnicianDataAndListenForReports() {
         viewModelScope.launch {
-            try {
-                val user = auth.currentUser
-                if (user == null) {
-                    Log.w(TAG, "No hay usuario autenticado")
-                    _tecnicoDependencia.value = null
-                    return@launch
-                }
+            val user = auth.currentUser ?: return@launch
+            val uid = user.uid
 
-                val uid = user.uid
+            // Intenta obtener la dependencia del técnico desde usuariosBD
+            val usuarioDoc = db.collection("usuariosBD").document(uid).get().await()
+            val dependencia = usuarioDoc.getString("dependencia")?.lowercase()
 
-                val usuarioDoc = db.collection("usuariosBD")
-                    .document(uid)
-                    .get()
-                    .await()
+            _tecnicoDependencia.value = dependencia // Almacenamos la dependencia
 
-                val dependencia = usuarioDoc.getString("dependencia")
-                    ?.trim()
-
-                _tecnicoDependencia.value = dependencia
-                Log.d(TAG, "Dependencia del técnico: $dependencia")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error al cargar dependencia del técnico", e)
-                _tecnicoDependencia.value = null
+            if (dependencia != null) {
+                Log.d("TecnicoVM", "Filtro activo para dependencia: $dependencia")
+                listenForAssignedReports(dependencia)
+            } else {
+                Log.w("TecnicoVM", "Dependencia no encontrada para UID $uid. Mostrando reportes sin filtrar.")
+                listenForAssignedReports(null) // Fallback
             }
         }
     }
 
-    /**
-     * Carga los reportes desde la colección reportesBD.
-     * Inyecta el idDocumento real de Firebase en cada reporte.
-     */
-    fun cargarReportesSistema() {
-        viewModelScope.launch {
-            try {
-                val snapshot = db.collection("reportesBD")
-                    .orderBy("fechaHoraCreacionReporte", Query.Direction.DESCENDING)
-                    .get()
-                    .await()
+    private fun listenForAssignedReports(dependencia: String?) {
+        var query = db.collection("reportesBD")
+            .whereEqualTo("reporteCompletado", 1) // Solo reportes Asignados/En proceso (Estado 1)
+            .orderBy("fechaHoraCreacionReporte", Query.Direction.DESCENDING)
 
+        // FILTRADO POR ESTACIÓN ASIGNADA
+        if (dependencia != null) {
+            query = query.whereEqualTo("estacionQueTieneReporte", dependencia.capitalize()) // Asume que la estación está en mayúsculas
+        }
+
+        query.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.e("TecnicoVM", "Error escuchando reportes: ${e.message}", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
                 val lista = snapshot.documents.mapNotNull { document ->
                     val data = document.toObject(ModeloReportesBD::class.java)
+                    // Inyectamos el ID del documento
                     data?.copy(idDocumento = document.id)
                 }
-
                 _listaReportesSistema.value = lista
-            } catch (e: Exception) {
-                Log.e(TAG, "Error al cargar reportes del sistema", e)
             }
         }
     }
 
     /**
-     * SIMULACIÓN: Calcula tiempo de ruta.
-     * (Si luego conectas con Google Maps o tu grafo, remplazas esto).
+     * SIMULACIÓN: Calcula la mejor ruta y tiempo entre dos estaciones.
+     * En producción, esta lógica consultaría Google Maps API.
      */
     fun getBestRouteTime(origen: String, destino: String): Pair<Int, String> {
-        // Simulación muy básica: tiempo base + número aleatorio
-        val tiempoBaseMin = 20
-        val tiempoOptimo = tiempoBaseMin + Random.nextInt(0, 15)
-        return tiempoOptimo to "Metro / Ruta simulada"
+        // Simulación básica de distancias y tiempo:
+        val tiempoBaseMin = when {
+            origen.contains(destino, ignoreCase = true) -> 5 // Ya está en la estación
+            origen == "Zaragoza" && destino == "Chapultepec" -> 35
+            else -> Random.nextInt(20, 50) // Tiempo base de 20-50 minutos
+        }
+
+        // Simulación del cálculo API
+        val tiempoOptimo = tiempoBaseMin + Random.nextInt(0, 10)
+
+        return Pair(tiempoOptimo, "Bus/Metro, Vía rápida")
     }
 
     /**
-     * Marca un reporte como solucionado (reporteCompletado = 2)
+     * El técnico marca que el problema ya se solucionó. Actualiza el campo reporteCompletado a 2.
      */
     fun marcarReporteComoSolucionado(
         idDocumento: String,
@@ -113,24 +116,20 @@ class ModeloDeVistaPantallaTecnico : ViewModel() {
         viewModelScope.launch {
             try {
                 if (idDocumento.isBlank()) {
-                    onError("Id del documento vacío")
+                    onError("ID de documento vacío")
                     return@launch
                 }
 
                 db.collection("reportesBD")
                     .document(idDocumento)
-                    .update("reporteCompletado", 2)
+                    .update("reporteCompletado", 2) // Estado 2 = Completado
                     .await()
 
                 onSuccess()
             } catch (e: Exception) {
-                Log.e(TAG, "Error al marcar como solucionado", e)
+                Log.e("TecnicoVM", "Error al marcar como solucionado", e)
                 onError(e.message ?: "Error desconocido")
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "TecnicoVM"
     }
 }

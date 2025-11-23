@@ -1,4 +1,4 @@
-package com.example.hackathon_ai_mobility.dijkstra
+package com.example.hackaton_ai_mobility.dijkstra
 
 
 import com.example.hackathon_ai_mobility.dijkstra.GrafoMetroCompleto

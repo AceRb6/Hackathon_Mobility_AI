@@ -1,75 +1,88 @@
-package com.example.hackathon_ai_mobility.mapa.usuario
+package com.example.hackathon_ai_mobility.mapatecnico.usuariotecnico
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hackathon_ai_mobility.dijkstra.GrafoMetroCompleto
-import com.example.hackathon_ai_mobility.dijkstra.cargarGrafoDesdeFirestore
-import com.example.hackathon_ai_mobility.modelos.EstacionBD
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.hackathon_ai_mobility.modelos.EstacionBD
+import com.example.hackaton_ai_mobility.dijkstra.cargarGrafoDesdeFirestore
 
-class MetroUsuarioViewModel(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
-) : ViewModel() {
+
+class MetroUsuarioViewModel : ViewModel() {
+
+    private val db = FirebaseFirestore.getInstance()
 
     private val _grafo = MutableStateFlow<GrafoMetroCompleto?>(null)
-    val grafo: StateFlow<GrafoMetroCompleto?> = _grafo.asStateFlow()
+    val grafo: StateFlow<GrafoMetroCompleto?> = _grafo
 
-    // nombreEstacionLowercase -> estáAbierta (true/false)
-    private val _estacionesActivas = MutableStateFlow<Map<String, Boolean>>(emptyMap())
-    val estacionesActivas: StateFlow<Map<String, Boolean>> = _estacionesActivas.asStateFlow()
+    private var listener: ListenerRegistration? = null
 
-    private var estacionesListener: ListenerRegistration? = null
+    // nombre estación (lowercase) -> true = abierta, false = cerrada
+    private val _estacionesActivas =
+        MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val estacionesActivas: StateFlow<Map<String, Boolean>> = _estacionesActivas
 
     init {
-        cargarGrafo()
-        observarEstaciones()
+        escucharCambios()
     }
 
-    private fun cargarGrafo() {
-        viewModelScope.launch {
-            try {
-                _grafo.value = cargarGrafoDesdeFirestore(db)
-            } catch (e: Exception) {
-                Log.e("MetroUsuarioVM", "Error al cargar grafo desde Firestore", e)
-                _grafo.value = null
-            }
-        }
-    }
+    private fun escucharCambios() {
+        // Por si acaso había otro listener
+        listener?.remove()
 
-    private fun observarEstaciones() {
-        estacionesListener?.remove()
-
-        estacionesListener = db.collection("estacionesBD")
-            .addSnapshotListener { snapshot, error ->
+        // Escuchar estacionesBD (que es donde actualiza el admin) :contentReference[oaicite:8]{index=8}
+        /*listener = db.collection("estacionesBD")
+            .addSnapshotListener { _, error ->
                 if (error != null) {
-                    Log.e("MetroUsuarioVM", "Error al escuchar estacionesBD", error)
+                    Log.e("MetroUsuarioViewModel", "Error escuchando estaciones", error)
                     return@addSnapshotListener
                 }
 
-                val mapa = snapshot?.documents
-                    ?.mapNotNull { doc ->
-                        val estacion = doc.toObject(EstacionBD::class.java)
-                        val nombre = estacion?.nombre?.trim()
-                        if (nombre.isNullOrEmpty()) return@mapNotNull null
-                        val abierta = estacion.abierta ?: 1
-                        nombre.lowercase() to (abierta == 1)
-                    }
-                    ?.toMap()
-                    ?: emptyMap()
+                // Reconstuir el grafo con el estado más reciente
+                viewModelScope.launch {
+                    _grafo.value = cargarGrafoDesdeFirestore(db)
+                }
+            }*/
 
-                _estacionesActivas.value = mapa
+        listener = db.collection("estacionesBD")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("MetroUsuarioViewModel", "Error escuchando estaciones", error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val nuevoMapa = mutableMapOf<String, Boolean>()
+
+                    snapshot.documents.forEach { doc ->
+                        val estacion = doc.toObject(EstacionBD::class.java)
+                        val nombreKey = estacion?.nombre?.trim()?.lowercase()
+                        val abiertaInt = estacion?.abierta ?: 1   // 1 = abierta, 0 = cerrada
+                        val estaAbierta = abiertaInt == 1
+
+                        if (nombreKey != null) {
+                            nuevoMapa[nombreKey] = estaAbierta
+                        }
+                    }
+
+                    _estacionesActivas.value = nuevoMapa
+                }
+
+                // Reconstruir el grafo con el estado más reciente
+                viewModelScope.launch {
+                    _grafo.value = cargarGrafoDesdeFirestore(db)
+                }
             }
     }
 
     override fun onCleared() {
         super.onCleared()
-        estacionesListener?.remove()
-        estacionesListener = null
+        listener?.remove()
+        listener = null
     }
 }
