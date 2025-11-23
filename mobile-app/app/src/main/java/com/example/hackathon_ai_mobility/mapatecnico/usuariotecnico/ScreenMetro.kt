@@ -52,6 +52,8 @@ fun ScreenDeMetroUsuario(
     /* onRutaCalculada: ((origen: String, destino: String, totalMetros: Int, pasos: List<String>) -> Unit)? = null,
      onRutaLimpiada: (() -> Unit)? = null*/
     viewModel: MetroUsuarioViewModel = viewModel(),
+    origenInicial: String? = null,
+    destinoInicial: String? = null,
     onRutaCalculada: ((String, String, Int, List<String>) -> Unit)? = null,
     onRutaLimpiada: (() -> Unit)? = null
 ) {
@@ -149,6 +151,44 @@ fun ScreenDeMetroUsuario(
     var estacionOrigen by remember { mutableStateOf<EstacionMetro?>(null) }
     var estacionDestino by remember { mutableStateOf<EstacionMetro?>(null) }
 
+// 👇 SOLO LÓGICA, NINGÚN @Composable AQUÍ
+    LaunchedEffect(origenInicial, destinoInicial, grafoMetro) {
+        if (origenInicial.isNullOrBlank() || destinoInicial.isNullOrBlank()) return@LaunchedEffect
+
+        val grafo = grafoMetro ?: return@LaunchedEffect
+
+        // Limpiamos cualquier ruta previa
+        for (i in visibles.indices) visibles[i] = false
+
+        val resultado = computeBestRoute(grafo, origenInicial, destinoInicial) ?: return@LaunchedEffect
+
+        val (_, pasos) = resultado
+
+        // Marcamos como visibles las estaciones de la ruta
+        pasos.forEach { paso ->
+            val nombreEstacion = when {
+                paso.startsWith("Transbordo en") ->
+                    paso.removePrefix("Transbordo en").substringBefore("→").trim()
+                else ->
+                    paso.substringBefore("(").trim()
+            }
+
+            val keyNombre = nombreEstacion.lowercase()
+            indicesPorNombre[keyNombre]?.forEach { idx ->
+                visibles[idx] = true
+            }
+        }
+
+        // Guardamos origen/destino para que la UI los conozca
+        estacionOrigen = estaciones.firstOrNull {
+            it.nombre.trim().equals(origenInicial.trim(), ignoreCase = true)
+        }
+        estacionDestino = estaciones.firstOrNull {
+            it.nombre.trim().equals(destinoInicial.trim(), ignoreCase = true)
+        }
+    }
+
+// 👇 A PARTIR DE AQUÍ YA VIENE EL MAPA (COMPOSABLES)
     BoxWithConstraints(
         modifier = Modifier
             .padding(8.dp)
@@ -179,10 +219,8 @@ fun ScreenDeMetroUsuario(
                 y = desplazamientoTentativo.y.coerceIn(-maxOffsetY, maxOffsetY)
             )
 
-            Log.d(TAG, "Transform: zoomChange=$zoomChange -> escala=$nuevaEscala, pan=$desplazamiento")
             escala = nuevaEscala
         }
-        // ===== FIN ZOOM Y PAN =====
 
         Box(
             modifier = Modifier

@@ -246,8 +246,16 @@ fun ItemReporteTecnico(
                 // 🔹 Botón para ir al mapa con la ruta sugerida
                 Button(
                     onClick = {
-                        // Llamamos al callback pasando origen y destino
-                        navegarAMapaRutaOSM(estacionTecnico, destinoReporte)
+                        // Lista de estaciones candidatas para origen
+                        val candidatos = listOf("Chapultepec", "Moctezuma", "Zaragoza")
+
+                        // Elegimos la de MENOR tiempo estimado hacia la estación del reporte
+                        val origenMasCercano = candidatos.minByOrNull { origenCandidato ->
+                            viewModel.getBestRouteTime(origenCandidato, destinoReporte).first
+                        } ?: estacionTecnico   // fallback por si acaso
+
+                        // Navegamos al mapa con origen = la más cercana y destino = estación del reporte
+                        navegarAMapaRutaOSM(origenMasCercano, destinoReporte)
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
