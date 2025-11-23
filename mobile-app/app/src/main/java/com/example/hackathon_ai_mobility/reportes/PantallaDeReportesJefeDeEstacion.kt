@@ -1,5 +1,5 @@
 package com.example.hackathon_ai_mobility.reportes
-
+/*
 import androidx.compose.foundation.layout.heightIn
 
 import androidx.compose.foundation.background
@@ -440,4 +440,4 @@ fun BuscadorEstacion(
             }
         }
     }
-}
+}*/

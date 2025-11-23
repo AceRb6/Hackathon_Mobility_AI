@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                          }
                      }*/
                     // Navegar automáticamente si hay sesión
-                   /* LaunchedEffect(UsuarioActual) {
+                    LaunchedEffect(UsuarioActual) {
                         val currentUser = auth.currentUser
                         if (currentUser != null) {
                             val email = currentUser.email?.lowercase()
@@ -82,12 +82,12 @@ class MainActivity : ComponentActivity() {
 
                             if (email != null && email.endsWith("@metro-cdmx.gob")) {
                                 // Auto-login administrador
-                                navHostController.navigate("navPrincipalAdmin") {
+                                navHostController.navigate("navInicial") {
                                     popUpTo("navInicial") { inclusive = true }
                                 }
                             } else {
                                 // Auto-login usuario normal
-                                navHostController.navigate("navPrincipalUsuario") {
+                                navHostController.navigate("navInicial") {
                                     popUpTo("navInicial") { inclusive = true }
                                 }
                             }
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                             Log.i("<---Ariel--->", "Usuario no está logueado")
                         }
-                    }*/
+                    }
 
 
 

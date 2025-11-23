@@ -2,6 +2,7 @@ package com.example.hackathon_ai_mobility.inicial
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -29,6 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.hackathon_ai_mobility.R
+import com.example.hackathon_ai_mobility.ui.theme.BackgroundButton
+import com.example.hackathon_ai_mobility.ui.theme.NaranjaAppMetroCDMX
+import com.example.hackathon_ai_mobility.ui.theme.ShapeButton
 
 @Composable
         /*Funciones Lamda para la navegacion*/
@@ -59,7 +65,7 @@ fun PantallaInicial(navegarPantallaIngresar: () -> Unit = {}, navegarPantallaReg
         /*Icono App (checar que sea responsive)*/
         Spacer(modifier = Modifier.weight(.5f))
         Image(
-            painter = painterResource(id = R.drawable.logo_appmetrocdmx),
+            painter = painterResource(id = R.drawable.logo_siemens),
             contentDescription = "",
             modifier = Modifier
 
@@ -145,7 +151,7 @@ fun BotonesPantallaRegistro() {
         contentAlignment = Alignment.CenterStart
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo_google),
+            painter = painterResource(id = R.drawable.logo_siemens),
             contentDescription = "",
             modifier = Modifier /*aqui si importa el orden, si pones el pading antes o despues se modifica como se percibe la imagen*/
                 .padding(start = 16.dp) //espacio entre el logo y el texto*/
