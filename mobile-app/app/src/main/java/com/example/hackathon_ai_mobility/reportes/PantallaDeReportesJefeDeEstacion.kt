@@ -67,9 +67,9 @@ fun PantallaDeReportesJefeDeEstacion(
     ///////// Variables de la nueva pantalla de Jefe de estación //////////////////////////
 
     //Variable de el problema
-    val problema = remember { mutableStateOf("" }
+    val problema = remember { mutableStateOf("") }
 
-    //Variable de la seccion DESCRIPCION
+    //Variable de la seccion DESCRIPCIN
     val descripcion = remember { mutableStateOf("") }
 
     //Varible de tipo
@@ -79,24 +79,11 @@ fun PantallaDeReportesJefeDeEstacion(
     val hora = remember { mutableStateOf("") }
 
     //Variable de equpo
-    val equipo = remember { mutableStateOf("" }
+    //val equipo = remember { mutableStateOf("") }
 
     //Variable estacion del metro
     val estacionMetro = remember { mutableStateOf("") }
 
-
-    val estaciones = listOf(
-        "Pantitlán",
-        "Zaragoza",
-        "Gómez Farías",
-        "Boulevard Puerto Aéreo",
-        "Balbuena",
-        "Moctezuma",
-        "San Lázaro",
-        "Candelaria",
-        "Merced",
-        "Pino Suárez"
-    )
     ///////////////////////////////////////////////////////Aqui acaban las variables///////////////////////////////
 /*
     //Esto es para Crear el reporte ya con la estacion seleccionada------------------
@@ -232,7 +219,7 @@ fun PantallaDeReportesJefeDeEstacion(
 
 
         //INICIO CUADRO DE Equipo
-        Text(
+        /*Text(
             "Equipo",
             color = Color.White,
             fontWeight = FontWeight.Bold,
@@ -245,7 +232,7 @@ fun PantallaDeReportesJefeDeEstacion(
             onEquipoChange = { nuevoEquipo ->
                 equipo.value = nuevoEquipo
             }
-        )
+        )*/
 
         // Inicio de tipo
         Row {
@@ -279,10 +266,7 @@ fun PantallaDeReportesJefeDeEstacion(
         // FINAL DE HORAINICIO
 
         // INICIO DE SELECCIONAR ESTACION
-        EstacionMetroSelector(
-            estacionMetro = estacionMetro,
-            estaciones = estaciones
-        )
+
         // FINAL DE SELECCIONAR ESTACION
 
         //BOTON PARA CREAR REPORTE
@@ -379,7 +363,7 @@ fun PantallaDeReportesJefeDeEstacion(
 }
 
 
-
+@Composable
 fun DescripcionField(
     descripcion: String,
     onDescripcionChange: (String) -> Unit
