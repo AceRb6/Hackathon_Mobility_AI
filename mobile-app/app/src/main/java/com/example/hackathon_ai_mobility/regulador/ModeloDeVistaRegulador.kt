@@ -17,7 +17,7 @@ class ModeloDeVistaRegulador : ViewModel() {
 
     private val db = Firebase.firestore
 
-    // Flujo de datos para mostrar la lista de reportes en la pantalla del Regulador
+    // Flujo de datos para mostrar la lista de reportes
     private val _listaReportesSistema = MutableStateFlow<List<ModeloReportesBD>>(emptyList())
     val listaReportesSistema: StateFlow<List<ModeloReportesBD>> = _listaReportesSistema.asStateFlow()
 
@@ -26,10 +26,10 @@ class ModeloDeVistaRegulador : ViewModel() {
     }
 
     /**
-     * Escucha en tiempo real la colección "reportesDB".
+     * Escucha reportes de la colección CORRECTA "reportesBD"
      */
     private fun escucharReportesEnTiempoReal() {
-        // CAMBIO: Ahora apunta a "reportesDB"
+        // ESTO ESTÁ CORRECTO EN TU CÓDIGO (BD)
         db.collection("reportesBD")
             .orderBy("fechaHoraCreacionReporte", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
@@ -45,9 +45,6 @@ class ModeloDeVistaRegulador : ViewModel() {
             }
     }
 
-    /**
-     * Actualiza el reporte existente en "reportesDB".
-     */
     fun completarReporteTecnico(
         idDocumento: String,
         descripcionTecnica: String,
@@ -59,21 +56,21 @@ class ModeloDeVistaRegulador : ViewModel() {
         viewModelScope.launch {
             try {
                 if (idDocumento.isBlank() || descripcionTecnica.isBlank()) {
-                    onError("El ID del documento o la descripción técnica están vacíos.")
+                    onError("Faltan datos obligatorios (ID o Descripción).")
                     return@launch
                 }
 
-                // Concatenación de datos para el campo de texto único en BD
                 val reporteFinalString = "Reporte: $descripcionTecnica | Equipo: $equipoLlevar"
 
                 val actualizaciones = mapOf(
                     "reporteTecnicoRegulador" to reporteFinalString,
                     "tipoProblema" to tipoProblemaConfirmado,
-                    "reporteCompletado" to 1 // 1 = Completado/Cerrado
+                    "reporteCompletado" to 1 // Pasa a estado completado/asignado a técnico
                 )
 
-                // CAMBIO: Ahora actualiza en "reportesDB"
-                db.collection("reportesDB")
+                // --- CORRECCIÓN CRÍTICA AQUÍ ---
+                // Antes tenías "reportesDB", debe ser "reportesBD" para coincidir con tu Firebase
+                db.collection("reportesBD")
                     .document(idDocumento)
                     .update(actualizaciones)
                     .await()
@@ -81,8 +78,8 @@ class ModeloDeVistaRegulador : ViewModel() {
                 onSuccess()
 
             } catch (e: Exception) {
-                Log.e("ReguladorVM", "Error actualizando reporte técnico", e)
-                onError(e.message ?: "Error desconocido al actualizar")
+                Log.e("ReguladorVM", "Error actualizando reporte", e)
+                onError(e.message ?: "Error desconocido")
             }
         }
     }
