@@ -52,7 +52,7 @@ fun PantallaDeReportesJefeDeEstacion(
     navegarPantallaMisReportesUsuario: () -> Unit = {}
 
 ){
-
+/*
     //AQUI EMPIEZA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
     val variableParaParaConsumirViewmodel: State<List<ModeloReportesBD>> = viewmodel.listaReportesBD.collectAsState()
 
@@ -63,7 +63,7 @@ fun PantallaDeReportesJefeDeEstacion(
     //--->val estacion  tengo que crear esta BD
 
     //AQUI TERMINA EL EJEMPLO DE LO QUE TENGO QUE MOSTRAR
-
+*/
     ///////// Variables de la nueva pantalla de Jefe de estación //////////////////////////
 
     //Variable de el problema
@@ -98,7 +98,7 @@ fun PantallaDeReportesJefeDeEstacion(
         "Pino Suárez"
     )
     ///////////////////////////////////////////////////////Aqui acaban las variables///////////////////////////////
-
+/*
     //Esto es para Crear el reporte ya con la estacion seleccionada------------------
 
     // Estaciones desde Firestore
@@ -114,7 +114,7 @@ fun PantallaDeReportesJefeDeEstacion(
 
     //FIN Crear el reporte ya con la estacion seleccionada------------------
 
-
+*/
 
 
     /////////////AQUI EMPIEZA EL MAQUETADO DEL BACKGROUND DE PANTALLADEREPORTESJEFEDEESTACION
@@ -340,7 +340,7 @@ fun PantallaDeReportesJefeDeEstacion(
     }
     //AQUI TERMINA EL MAQUETADO DEL BACKGROUND DE PANTALLAREPORTESUSUARIO
 
-
+/*
     // Diálogos DE ESTACION CERRADADA
     if (mostrarDialogoEstacionCerrada) {
         AlertDialog(
@@ -355,7 +355,7 @@ fun PantallaDeReportesJefeDeEstacion(
         )
     }
     //FIN Diálogos DE ESTACION CERRADADA
-
+*/
     //DIALOGOS CREACION DE REPORTE CORRECTO
     if (mostrarDialogoGracias) {
         AlertDialog(
@@ -379,7 +379,7 @@ fun PantallaDeReportesJefeDeEstacion(
 }
 
 
-@Composable
+
 fun DescripcionField(
     descripcion: String,
     onDescripcionChange: (String) -> Unit
@@ -541,7 +541,7 @@ fun BuscadorEstacion(
 }
 */
 @Composable
-fun BuscadorEstacion(
+/*fun BuscadorEstacion(
     texto: String,
     onTextoChange: (String) -> Unit,
     estaciones: List<EstacionBD>,
@@ -611,3 +611,4 @@ fun BuscadorEstacion(
         }
     }
 }
+*/
