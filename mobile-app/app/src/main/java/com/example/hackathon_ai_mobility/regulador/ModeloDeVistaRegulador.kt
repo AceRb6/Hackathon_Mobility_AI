@@ -3,10 +3,10 @@ package com.example.hackathon_ai_mobility.regulador
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hackathon_ai_mobility.modelos.EstacionBD
+import com.example.hackathon_ai_mobility.modelos.ModeloReportesBD
 import com.google.firebase.Firebase
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,63 +17,74 @@ class ModeloDeVistaRegulador : ViewModel() {
 
     private val db = Firebase.firestore
 
-    // Estado para la lista de estaciones (para el Dropdown)
-    private val _listaEstaciones = MutableStateFlow<List<EstacionBD>>(emptyList())
-    val listaEstaciones: StateFlow<List<EstacionBD>> = _listaEstaciones.asStateFlow()
+    // Flujo de datos para mostrar la lista de reportes en la pantalla del Regulador
+    private val _listaReportesSistema = MutableStateFlow<List<ModeloReportesBD>>(emptyList())
+    val listaReportesSistema: StateFlow<List<ModeloReportesBD>> = _listaReportesSistema.asStateFlow()
 
     init {
-        obtenerEstaciones()
+        escucharReportesEnTiempoReal()
     }
 
-    // Descarga las estaciones de la colección existente "estacionesBD"
-    private fun obtenerEstaciones() {
-        viewModelScope.launch {
-            try {
-                val result = db.collection("estacionesBD").get().await()
-                val estaciones = result.toObjects(EstacionBD::class.java)
-                _listaEstaciones.value = estaciones
-            } catch (e: Exception) {
-                Log.e("ReguladorVM", "Error al obtener estaciones", e)
+    /**
+     * Escucha en tiempo real la colección "reportes_sistema".
+     * Muestra el historial completo ordenado por fecha descendente.
+     */
+    private fun escucharReportesEnTiempoReal() {
+        db.collection("reportes_sistema")
+            .orderBy("fechaHoraCreacionReporte", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("ReguladorVM", "Error escuchando reportes", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val reportes = snapshot.toObjects<ModeloReportesBD>()
+                    _listaReportesSistema.value = reportes
+                }
             }
-        }
     }
 
-    // Función para enviar el reporte con las variables solicitadas
-    fun enviarReporteRegulador(
-        titulo: String,
-        horaIni: String,
-        descripcion: String,
-        estacion: String,
-        equipo: String,
-        tipo: Int,
+    /**
+     * Actualiza el reporte existente.
+     * Concatena la descripción técnica con el equipo necesario.
+     * Actualiza el tipo de problema confirmado.
+     * Cierra el reporte (estado 1).
+     */
+    fun completarReporteTecnico(
+        idDocumento: String,
+        descripcionTecnica: String,
+        equipoLlevar: String,
+        tipoProblemaConfirmado: Int,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
-            if (titulo.isBlank() || horaIni.isBlank() || descripcion.isBlank() || estacion.isBlank()) {
-                onError("Faltan campos obligatorios")
-                return@launch
-            }
-
-            val reporteData = hashMapOf(
-                "Titulo" to titulo,
-                "Hora_ini" to horaIni,
-                "Descripcion" to descripcion,
-                "Estacion" to estacion,
-                "Equipo" to equipo,
-                "Tipo" to tipo,
-                "fecha_creacion" to FieldValue.serverTimestamp()
-            )
-
             try {
-                // Guarda en la colección "reportes_regulador" (ajusta el nombre si es necesario)
-                db.collection("reportes_regulador")
-                    .add(reporteData)
+                if (idDocumento.isBlank() || descripcionTecnica.isBlank()) {
+                    onError("El ID del documento o la descripción técnica están vacíos.")
+                    return@launch
+                }
+
+                // Concatenación de datos para el campo de texto único en BD
+                val reporteFinalString = "Reporte: $descripcionTecnica | Equipo: $equipoLlevar"
+
+                val actualizaciones = mapOf(
+                    "reporteTecnicoRegulador" to reporteFinalString,
+                    "tipoProblema" to tipoProblemaConfirmado,
+                    "reporteCompletado" to 1 // 1 = Completado/Cerrado
+                )
+
+                db.collection("reportes_sistema")
+                    .document(idDocumento)
+                    .update(actualizaciones)
                     .await()
+
                 onSuccess()
+
             } catch (e: Exception) {
-                Log.e("ReguladorVM", "Error enviando reporte", e)
-                onError(e.message ?: "Error desconocido")
+                Log.e("ReguladorVM", "Error actualizando reporte técnico", e)
+                onError(e.message ?: "Error desconocido al actualizar")
             }
         }
     }
